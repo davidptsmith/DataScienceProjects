@@ -1,0 +1,4619 @@
+---
+title: "CITS 4009 Project 2:\n Global Terrorism Database (GTD)"
+author: "David Smith (21484971)"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_depth: '3'
+    df_print: paged
+  html_notebook:
+    toc: yes
+    toc_depth: 3
+    number_sections: yes
+    toc_float: yes
+    toc_collapsed: no
+    smooth_scroll: no
+    code_folding: show
+    theme: simplex
+    df_print: kable
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+ echo = TRUE,
+ out.width = "80%",
+ fig.align="center",
+  message = FALSE, 
+ warning = FALSE, 
+ tidy=TRUE ## Added as auto code cleaning
+)
+
+```
+
+
+
+
+
+<br/>
+
+***Please Note: This report discusses acts of terrorism.***
+
+This trigger warning for anyone who may be personally affected by this topic - specific details of attacks are not explicitly discussed however summaries of events are provided as well as other statistics
+
+
+
+<br/>
+
+Elements of assignment 1 have been included for consistency and context, these will marked with " *(Assignment 1)* " tags to make it clear what has been added as a part of assessment 2. I have also removed the plots and exploration from this assignment for simplicity, if you wish to see the final report together, please let me know and I can mere it for you. 
+
+
+# Assignment 2 Overview 
+
+## Modeling Interfaces 
+
+The purpose of assignment two is analyze and fit machine learning models to the data, specifically clustering and classification models. 
+
+In order to achieve this, the goal was to look for the best workflow for implementing machine learning models in R. As such, research and testing was conducted on a few machine learning frameworks in R, specifically **MLR**, **MLR3**, and **TidyModls**. Before moving into the testing below, here is a brief summary of each package and why it was tested. 
+
+**MLR**
+
+Upon researching machine learning and modeling interfaces in R, I came across the MLR package which has a goal of unifying interfaces to modeling and providing a single process for modeling similar to Scikit learn in python.I began my exploration of this package with help of the book **Machine Learning with R, The Tidyverse, and MLR** by Rhys Hefin (2020) on the O'Reily platform, and Heflin's youtube videos. 
+
+The package was pretty concise and easy to setup and implement modeling quickly whilst also enabling parallelization which allowed me to use the majority of my available computing resources. The package made if very easy to set up different models, training, predict, and evaluate the models. However, when hitting hurdles and wanting to take things further I found that the package was already deprecated by **MLR3**. So I decided it would be best to move to this package and continue the testing. 
+
+MLr3 was obviously quite similar and extended on the base work of the previous MLR package, however when running into problems where functions had been updated in the package without changes made in the documentation, I found it difficult to get results quickly. As the package is obviously very new there is little community help, however with its object oriented interface and vast ecosystem of extension packages, I may end up taking another look at this once more support is established and the documentation is revised. 
+
+**TidyModels**
+
+After hitting walls with MLR3, I decided to do some further research into a package that I knew to be well documented and supported by the community, **Caret**. However, upon doing so I stumbled upon an article **Tidymodels: tidy machine learning in R** by Rebecca Barter which outlined the new TidyModels package. She outlined how Caret was developed by Max Kuhn, formally at Pfeizer, several years ago to create a unified machine learning interface however it had some performance and interoperability problems. RStudio then hired Max to build a tidy version of the Caret Package. This was big news for me as I find the Tidyverse very intuitive, consistent, and readable - something that often is not the case in regular R. 
+
+One of the biggest benefits of the TidyModels interface is that it has a huge amount of support from RStudio and the community and finding great resources was easy. Whilst the interface is not quite as simple as with MLR, it allows for far greater flexibility, control, and provides and interface for many different platforms such as Keras, Spark, and built in R functions. 
+
+After getting used to the process through a lot of testing, the TidyModels package is very powerful and allows for fast exploration of different models and model tuning with robust comparison metrics and visualizations. The data preprocessing and cross validation functions made if very easy to get the data into the right shape for modelling with transparency across the process. An added benefit of the process is that the outputs adhere to the tidy principles and are therefore very easy to work with. 
+
+I would strongly recommend others to take a look at this package and see if it works for them. 
+
+
+
+
+
+# Introduction
+
+*(Assignment 1)*
+
+Acts of terrorism have a way of grabbing headlines. By their nature, these horrific acts of violence are used to instill fear and are enacted for a myriad of reasons and yet are seldom understood. Many aspects of society have fundamentally changed due to acts of terrorism. Air travel, urban design, financial systems, and diplomatic strategy have all had to adapt to the modern counter terrorism landscape. 
+
+The importance of this topic to modern society cannot be understated. Hundreds of thousands of people have been killed in the name of countless causes globally. With the number of attacks significantly increasing due to various enabling factors, research, or at least publicly available research, seems to be lagging behind as information is difficult to define, attain, and collate. The lack of quantitative information available has meant that the majority of research on terrorism is primarily qualitative conjecture. 
+
+A 2011 study performed in the United States by the National Consortium for the Study of Terrorism And Response to Terrorism (START) found that of 300 hypotheses formulated around terrorism in academia only 8 possessed both significant qualitative and quantitative supporting evidence.^[Influencing Violent Extremist Organizations: Planning Influence Activities While Accounting for Unintended Side Effects (I-VEO), National Consortium for the Study of Terrorism and Responses to Terrorism (START), University of Maryland. (2011).  Retrieved from http://start.foxtrotdev.com/] With conflicting sources, definitions, and unreliable data this is unsurprising however, there is considerable valuable to be gained through the exploration of data and ideas relating to terrorism.
+
+The primary goal of the data exploration is to gain insights from historic terrorism data to better understand:
+
+1) How is terrorism evolving over time?  
+2) Who are the primary groups, how do they operate, and where do they operate?  
+
+These high-level questions will provide the framework for further analysis questions that explore more specific aspects throughout the data exploration process. 
+
+
+
+
+# Import Libraries & Data
+
+## Import Libraries 
+
+```{r,results='hide', message=FALSE}
+## R Markdown Useful Functions 
+suppressWarnings(library(knitr));
+
+## Data table visualisation 
+suppressWarnings(library(kableExtra));
+
+## HTML Tools 
+suppressWarnings(library(htmltools)); 
+suppressWarnings(library(htmlwidgets));
+
+## Create Interactive Plots
+suppressWarnings(library(plotly));
+
+## Data cleaning & Visuals 
+suppressWarnings(library(tidyverse)); 
+
+## Used for mapping 
+suppressWarnings(library(leaflet));
+
+## Colour palettes
+suppressWarnings(library(RColorBrewer));
+
+## Create Tree Map
+suppressWarnings(library(treemapify));
+
+## Handle Units 
+suppressWarnings(library(scales))
+
+## Add extra graphing functions
+suppressWarnings(library(ggExtra))
+
+## load machine learning R 
+# suppressWarnings(library(mlr))
+```
+
+
+## Load The Data & Overview
+
+*(Assignment 1)*
+
+```{r import_data,results='hide',fig.keep='all'}
+# Load data from excel - this is a large database and can take a few moments
+gtd.data <- read.csv("../CITS-4409_Assignment1/00 Data/globalterrorismdb_0221dist.csv");
+
+```
+
+
+### Head of data
+
+*(Assignment 1)*
+
+```{r}
+
+head(gtd.data, 5) 
+
+```
+ 
+
+### Structure of Imported Data
+
+*(Assignment 1)*
+
+The data set contains 201,183 observations and 135 variables. 
+
+```{r, eval=FALSE}
+
+str(gtd.data)
+
+```
+ 
+
+
+
+
+# Initialising functions 
+
+## Setting Up Colour Scale Functions & Themes
+
+
+This section initializes a set number of graphics that take in data frames and plot macro level visualizations. 
+These reusable graphics will allow me to quickly explore the data related to regions, terrorist groups, or other filters. 
+
+### Theme Setup 
+
+```{r}
+## Standard Theme used
+graph_theme <-    theme_minimal() +
+  theme(
+    plot.title = element_text(size = 14, hjust = 0.5 , margin = margin(5,5,0,5) ),
+    legend.text=element_text(size=10) 
+    )
+
+## Blank Theme 
+blank_theme <- theme_minimal() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    panel.border = element_blank(),
+    panel.grid = element_blank(),
+    axis.ticks = element_blank(),
+    plot.title = element_text(size = 14, margin = margin(5,5,0,5) ),
+    legend.text=element_text(size=10) 
+  )
+```
+
+
+### Setting Up Colour Scheme Function 
+
+Setting up a function that quickly applies themes to graphs has worked well to have the bulk controls over colours, fonts and themes in one location. The DRY (Don't Repeat Yourself) principle in coding is why this has been done. It means that if anything needs to be changed later on it can be done very quickly and easily. 
+
+A function rather than as a regular ggplot theme has been chosen to apply templates to have better control over the plot's colours and how they are produced from the number of elements. 
+
+As a note for the colour scheme, please see the comment after the introduction. This has been formatted for web display using interactive plots. If you require a PDF or printed version the colours can be updated. 
+
+
+
+```{r}
+
+## Overall Colour Palette
+colour_palette <- "Oranges"
+
+
+## Function to get the colour palette
+getPalette = colorRampPalette(brewer.pal(9, colour_palette))
+
+
+## Function for the application of themes
+apply_theme <- function(ggplot_graph , colourCount) {
+  ## Handle the applications of colour
+
+  if (colourCount > 9)
+  {
+    ggplot_graph <-   ggplot_graph +
+      scale_color_manual(values = getPalette(colourCount)) +
+      scale_fill_manual(values = getPalette(colourCount))
+  }
+  else
+  {
+    if (colourCount < 3)
+    {
+      colourCount <- 3
+    }
+    ggplot_graph <-   ggplot_graph +
+      scale_color_manual(values = rev(brewer.pal(colourCount, colour_palette))) +
+      scale_fill_manual(values = rev(brewer.pal(colourCount, colour_palette)))
+  }
+
+  ## Apply non colour related theme overrides
+  ggplot_graph <- ggplot_graph +
+    theme_light() +
+    theme(plot.title = element_text(hjust = 0.5))
+
+  ## Return the graph
+  return(ggplot_graph)
+}
+
+
+```
+
+
+
+
+
+# Primary Data Cleaning 
+The data has many missing values and know issues that need to be resolved. In this section the majority of the data cleaning will take place however further and more specific data cleaning will be applied in later steps as required by the exploration process. 
+
+
+## Rename Varaible With Import Issue
+
+Rename "ï..eventid" to "eventid", this seems to be an error with how the data is being read into R and is the firth thing to be resolved to ensure that ther are no errors in selecting this variable later on.
+
+```{r}
+
+gtd.data <- gtd.data %>%
+  rename( eventid = ï..eventid	);
+
+```
+
+ 
+
+
+## Cleaning Missing Values
+
+*(Assignment 1)*
+
+As seen in the documentation of the data where some values are not known and are coded with -99.  
+To avoid issues with calculations these are converted from -99 to NA.
+
+```{r}
+## Transform and override existing variables in the dataset 
+gtd.data <- gtd.data  %>%
+  mutate(
+    nperps = ifelse(nperps == -99, NA, nperps),
+    nperpcap = ifelse(nperpcap == -99, NA, nperpcap),
+    nhostkid = ifelse(nhostkid == -99, NA, nhostkid),
+    propvalue = ifelse(propvalue == -99, NA, propvalue),
+    nhours = ifelse(nhours == -99, NA, nhours), 
+    claimed = ifelse(claimed == -9, NA, claimed) 
+  )
+
+```
+
+
+## Missing Data
+There is a lot of missing data and to remove them all would leave very little information within the data frame. It is however important to see where the majority of missing data is. The exploration of is is something that will be looked into further to better understand data quality. 
+From the results below we can note that information pertaining to hostages and property value are the most comment number of missing values. 
+
+
+## Missing Data By Variable 
+
+*(Assignment 1)*
+
+```{r}
+## Get missing values
+missing_values <- gtd.data %>%
+  gather(key = "key", value = "val") %>%
+  mutate(is_missing = is.na(val)) %>%
+  group_by(key, is_missing) %>%
+  summarise(num_missing = n()) %>%
+  filter(is_missing == T) %>%
+  select(-is_missing) %>%
+  arrange(desc(num_missing))
+
+missing_values
+
+```
+<br/>
+
+Using the data collected before we can graph this the missing values to better understand how this will impact the data for each variable.
+
+The missing data is primarily in variables we would expect to see. Some of these were added to later collection efforts and therefore the information has not been collected may therefore be marked as NA. 
+
+Information regarding hostages is difficult to get from certain areas and when information is known many times there is vested interest from counter terrorist organizations to not have the information released publicly. As this database is based on public, non-classified information, this is expected to be missing. 
+
+Property value is very difficult to define and as such this expected to be either unknown or incorrect. 
+
+The claimed variable was introduced as a variable in 1997 and therefore legacy data that has not been updated will be coded as NA. 
+
+Number of Perpetrators often goes unreported or is unknown as such we expect to see this with a high level of NA data points. 
+
+**Missing Value Exploration has been removed as it was a part of assignment 1**
+
+
+## Handle Missing Categories 
+
+Using Tidyverses's $na_if$ function in conjunction with $across$ to map through the values and replace missing and empty strings with NA is a great way of quickly coding the values for the Vtreat plan. 
+
+```{r}
+
+gtd.data <- gtd.data %>%
+   mutate(
+     across(where(is.character), ~na_if(., "Unknown")),
+       across(where(is.character), ~na_if(., ""))
+     )
+
+gtd.data
+
+```
+
+
+
+
+
+# Reduce number of elements to after 1995  
+
+
+The data has been reduced due to validity of number of fields and encoding issued prior to 1995, where the modern processes were applied. Looking at previous data may cause issues due to imbalance of reporting. 
+
+See assignment 1 EDA for more details on this and the biases. 
+
+ 
+```{r}
+gtd.data<- gtd.data %>%
+  filter(
+    iyear > 1996
+  )
+```
+
+
+
+
+# Create New Variabels 
+
+*(Assignment 1)*
+
+Variables were created to aid in the analysis process by combining others. Whilst some were created and added to the whole dataset as they are used across many graphs some were only created locally for specific visualisations. The two variables that were important to create for the dataset was the following: 
+
+-	**Number of Casualties** (ncasualites): the sum of all people either killed or wounded in an attack 
+
+-	**Date** (date) the combination of year, month, and day variables.  In creating a new date variable that we can use for calculating frequencies of attacks we see the issue with the coding. Where the exact day of an attack is unknown the day variable is coded with 0. When calling the make date function this will become an NA value. I think this is good as it will potentially through of calculations and skew the data if we change this to be the first of a month or another date. Some larger monthly calculations might be used instead.
+
+
+```{r}
+
+gtd.data <- gtd.data  %>%
+  mutate(
+    ncasualties = sum(nkill) + sum(nwound),
+    date = lubridate::make_date(iyear,imonth, iday)
+    
+  ) %>%
+  ungroup() %>% 
+  select(
+
+    -imonth, 
+    -iday
+  )
+gtd.data.clust <- gtd.data
+
+## View Sample of what has been returned
+head(gtd.data, 10) %>%
+  select( nkill, nwound, ncasualties, date) 
+
+```
+
+
+
+# Create Response Variable 
+
+For the classification modeling, whether an attack was lethal or not will be used. As such, if an attack had a number of deaths greater than zero it is considered a lethal attack. 
+
+
+```{r}
+
+## Filter data and create Variable 
+gtd.data <- gtd.data %>% 
+  filter(
+    ! is.na(nkill)
+  ) %>% 
+  mutate(
+    wasLethal = ifelse(
+      nkill > 0, TRUE , FALSE
+    )
+  ) %>% relocate(wasLethal)
+
+head(gtd.data)
+```
+
+
+
+
+ 
+
+
+## Selected Variables & Data Explaination 
+
+From the 135 variables a subset of 37 variables has been selected in order to perform analysis and exploration. These variables have been chosen in order to answer the primary research questions. Others may be incorporated as needed however the follow list will be updated to accurately reflect what is being used. 
+
+
+
+```{r}
+
+gtd.explanatory.chars <-  c(
+  "provstate",
+  "motive",
+  "summary",
+  "corp1",
+  "target1",
+  "gname",
+  "city",
+  "country_txt",
+  "natlty1_txt",
+  "propextent_txt",
+  
+  "latitude",
+  "longitude"
+)
+
+gtd.explanatory.categorical <- c(
+  "region_txt",
+  "success",
+  "suicide",
+  "attacktype1_txt",
+  "targtype1_txt",
+  "individual",
+  "claimed",
+  "claimmode_txt",
+  "weaptype1_txt",
+  "hostkidoutcome_txt"
+)
+gtd.explanatory.numeric <- c(
+  
+  "iyear",
+  "nwound",
+  "propvalue",
+  "nhostkid",
+  "nhours",
+  "nreleased",
+  "nperps",
+  "nperpcap"
+)
+
+gtd.response <- "wasLethal"
+
+gtd.explanatory <- c( gtd.explanatory.categorical , gtd.explanatory.numeric) 
+
+gtd.explanatory
+
+```
+
+
+
+## Reducing Number of fields 
+
+Not all the variables are required for the analysis questions and as such many have been removed to ensure simplicity in the modeling, viewing of the data, and ease of use.
+
+Below the variables are selected and a the head of the data is displayed as an example. 
+
+```{r}
+
+## Select Subset of variables 
+gtd.data <-  gtd.data %>%
+  select(
+    gtd.explanatory,
+    gtd.response
+    )
+gtd.data
+
+
+## View Sample of what has been returned
+head(gtd.data, 5) 
+
+```
+
+
+
+
+
+## Apply Treatment 
+
+Many modeling algorithms require the data to be in a specific format and without missing data. The **Vtreat** has been used here for the initial cleaning, however, when using the **Tidy Models** package, their package is used to normalize, center data, and handle other required transformations for specific algorithms.   
+
+### Setup Treatment Plan
+
+```{r}
+
+library(vtreat)
+
+
+treatement_plan <- vtreat::design_missingness_treatment( gtd.data, varlist =  gtd.explanatory)
+
+training_prepared <- vtreat::prepare( treatement_plan, gtd.data )
+
+
+```
+
+
+### Convert To Factors 
+
+VTreat seems to be converting all factors to characters so we need to convert them back where the number of levels is less than 200. This way we can still identify these as characters and filter them out for some of the modeling phase. 
+
+```{r}
+
+## Convert all characters to factors (maybe limit to where factor < 200 or some value)
+training_prepared <- training_prepared %>%
+   mutate(
+     across(
+       where( ~ is.character(.x) &&  nlevels(as.factor(.x)) < 200), ~as.factor(x = .)), 
+    #   eventid = as.character(eventid)
+     )
+
+## Convert all booleans to factors 
+training_prepared <- training_prepared %>%   
+  mutate(
+     across(
+       where( ~ is.numeric(.x) && nlevels(as.factor(.x)) == 2 ), ~as.factor(x = .))
+     )
+
+```
+
+
+### Explore Vtreat Outcome 
+
+#### Number of Columns 
+
+Here we can see that the vtreat function has added extra columns in to identify bad data, using the "_isBad" flag.
+
+```{r}
+ 
+cat("Previous Column Names:\n")
+colnames(gtd.data)
+
+cat("\n\nPrevious Column Names:\n")
+colnames(training_prepared)
+
+```
+
+
+
+#### Structure
+```{r}
+str(training_prepared)
+
+```
+
+#### Head of data
+
+```{r}
+
+## View Sample of what has been returned
+head(training_prepared, 50)
+```
+
+
+
+
+
+
+# Classification of a Lethal Attack 
+
+
+The classification task will be to see if, by using the explanatory variables, we can predict if an attack is lethal or not at a rate higher than using a single variable option or 50% chance.
+
+
+
+## Lethal Attack Exploration 
+
+
+### Check Balance of Data
+
+Based on the number of attacks and it seems that both lethal and non-lethal attacks are balanced overall.
+
+```{r}
+ ## Filter data and create Variable 
+data <- training_prepared %>% 
+  group_by(
+    iyear , wasLethal
+  ) %>% 
+  summarise(nAttack =  n())
+
+
+plot <- data %>% ggplot() +
+  geom_bar(aes(wasLethal , fill = wasLethal))+
+  graph_theme +
+  labs(
+    title = "Response Variable Balance"
+  )
+
+htmltools::div(ggplotly(plot), align = "center")
+
+```
+
+### Data Balance over Time
+
+To check that this is not an anomaly, the balance has been plotted over time where we can see in both the line graph and the proportion bar chart, this is relatively balanced over time. 
+
+```{r}
+
+## Create Plot
+plot <- ggplot(data = data, aes(x = iyear)) +
+  geom_line(mapping = aes(y = nAttack , colour = wasLethal))+
+  graph_theme +
+  labs(
+    title = "Response Variable Balance Over Time"
+  )
+
+htmltools::div(ggplotly(plot), align = "center")
+```
+### Data Proportion Balance Over Time 
+
+```{r}
+
+#### Create Stacked chart over time
+plot <- ggplot(data, aes(x=iyear ,  y= nAttack, fill=wasLethal ) )+
+  geom_bar(width = 1, stat = "identity" , position = "fill") +
+    xlab('Year') +
+    ylab('Percentage Attack Type')+
+  graph_theme +
+  labs(
+    title = "Proportion Response Variable Balance Over Time"
+  );
+
+ ## plot graph
+htmltools::div( ggplotly(plot), align="center" )
+```
+
+
+
+
+
+
+
+
+
+
+
+
+# Splitting Data 
+
+The data here has been split by 80% for training and 20% for testing. This data split is only being used in the single variable tests as a more robust cross folds process will be used in the modeling phase. This does however mean that the accuracy of this test and the metrics used to compare between the single variable models and the final models are not fully comparitable, however this is not a major issue. If the results were close, further examination would be needed however this phase is to primarily get a baseline model to compare to. 
+
+
+```{r}
+
+## 80% of the sample size
+smp_size <- floor(0.8 * nrow(training_prepared))
+
+## set the seed to make your partition reproducible
+set.seed(123)
+train_ind <- sample(seq_len(nrow(training_prepared)), size = smp_size)
+
+## Training 
+gtd.data.train <- training_prepared[train_ind, ]
+
+## Test Data 
+gtd.data.test <- training_prepared[-train_ind, ]
+
+t <- tribble(
+  ~Group, ~Count,
+  "Training" , nrow(gtd.data.train) , 
+  "Testing" , nrow(gtd.data.test)
+)
+
+plot <- t %>% ggplot(aes(x = Group, y = Count, fill= Group)) +
+geom_bar(stat = "identity")+
+  graph_theme +
+  labs(
+    title = "Testing & Training Balance"
+  );
+
+ ## plot graph
+htmltools::div( ggplotly(plot), align="center" )
+
+```
+
+
+# Single Variabel Models 
+
+## Categorical Models 
+
+First, we look at how well each categorical model fits the data and see what our baseline model is. 
+
+```{r}
+# outCol: vector holding the values (known in the training step) of the
+# output column that we want to predict, e.g., the 'churn' column.
+# varCol: the single variable column that is of interest. Can we use this
+# column alone to predict outCol?
+# appCol: after building the model, we can apply it to this column (same
+# as varCol but may come from the calibration or test set).
+
+predict_categorical <- function(outCol, varCol, appCol, pos = pos.label) {
+  ## Get the stats on how often postive during training
+  pPos <- sum(outCol == pos) / length(outCol)
+  naTab <- table(as.factor(outCol[is.na(varCol)]))
+  ##Gets the stats on how often outome is positive for NA values of variable during training
+  pPosWna <- (naTab / sum(naTab))[pos]
+  vTab <- table(as.factor(outCol), varCol)
+  pPosWv <- (vTab[pos, ] + 1.0e-3 * pPos) / (colSums(vTab) + 1.0e-3)
+  ## Make Prediction
+  pred <- pPosWv[appCol]
+  ## Add prediction for NA levels
+  pred[is.na(appCol)] <- pPosWna
+  #Add in predicitons for levels of appCol that weren't known during training
+  pred[is.na(pred)] <- pPos
+  ##Return prediction
+  pred
+}
+
+calcAUC <- function(predcol, outcol, pos=pos.label) {
+  perf <- performance(prediction(predcol, outcol==pos),'auc')
+  as.numeric(perf@y.values)
+}
+
+```
+
+
+
+### Fitting the Categorical Model 
+
+There does not look to be much overfitting or underfitting in these models or issues with the sampling as the test and training values are very comparable. 
+
+The greatest ROC value is from using "predweaptype1_txt" to predict if an attack was lethal or not, however, it has an ROC value of "0.5612271" in the training which is not very high. 
+
+```{r}
+
+tb <- tribble(
+  ~Variable, ~Train_AUC, ~Test_AUC
+)
+
+outcome <- 1
+pos.label <- TRUE
+
+library(ROCR)
+
+# call the predict_categorical() function for all the categorical columns
+for (v in gtd.explanatory.categorical) {
+  predvariable <- paste('pred', v, sep = '')
+  gtd.data.train[, predvariable] <-
+    predict_categorical(gtd.data.train[, gtd.response], gtd.data.train[, v], gtd.data.train[, v])
+  gtd.data.test[, predvariable] <-
+    predict_categorical(gtd.data.train[, gtd.response], gtd.data.train[, v], gtd.data.test[, v])
+  
+  aucTrain <-
+    calcAUC(gtd.data.train[, predvariable], gtd.data.train[, gtd.response])
+  
+  aucCal <-
+    calcAUC(gtd.data.test[, predvariable], gtd.data.test[, gtd.response])
+  
+  tb <-
+    tb %>% add_row(Variable = predvariable,
+                   Train_AUC = aucTrain,
+                   Test_AUC = aucCal)
+  }
+
+
+tb %>% arrange(desc(Test_AUC))
+```
+
+
+
+## Numertic Models
+
+Next, we check how well the numerical variables predict the lethality of an attack. 
+
+
+```{r}
+predict_numerical <- function(outCol,varCol,appCol) {
+  cuts <- unique(as.numeric(quantile(varCol, probs=seq(0, 1, 0.1), na.rm=T)))
+  varC <- cut(varCol, cuts)
+  appC <- cut(appCol, cuts)
+  predict_categorical(outCol, varC, appC)
+}
+```
+
+### Fitting the Numeric Model 
+
+Here the results are roughly same with little evidence of over or under fitting of the model. The highest ROC for the test set is just over 0.55. 
+
+```{r}
+
+for(v in gtd.explanatory.numeric) {
+  predvariable <- paste('pred', v, sep = '')
+  
+  gtd.data.train[, predvariable] <-
+    predict_numerical(gtd.data.train[, gtd.response],
+                      gtd.data.train[, v],
+                      gtd.data.train[, v])
+  
+  gtd.data.test[, predvariable] <-
+    predict_numerical(gtd.data.train[, gtd.response],
+                      gtd.data.train[, v],
+                      gtd.data.test[, v])
+  
+  aucTrain <- calcAUC(gtd.data.train[, predvariable],
+                      gtd.data.train[, gtd.response])
+  
+  aucCal <- calcAUC(gtd.data.test[, predvariable],
+                    gtd.data.test[, gtd.response])
+  
+  tb <-  tb %>% add_row(Variable = predvariable,
+                        Train_AUC = aucTrain,
+                        Test_AUC = aucCal)
+}
+
+tb %>% arrange(desc(Test_AUC))
+```
+
+
+### Density Plots
+
+With the numeric variables we can plot the density of the response, wasLethal, over the values and see if they follow closely. If they deviate and certain points this could give an insight into underlying patterns in the data. 
+
+
+
+##### Number of People Wounded
+
+For number of people wounded, it seems that as the values increase, the proportion of leathal attacks increases. This seems to make sense from context, with larger, more impactful attacks more likely to cause death. Conversly when ther are few injured, there is a significant reduction the the proportion of lethal attacks.
+
+```{r}
+plot <- ggplot(data=gtd.data.test) +
+  geom_density(aes(x=nwound,color=as.factor(wasLethal))) +
+  scale_x_continuous(trans='log10') +
+  graph_theme +
+  labs(
+    title = "Density Plot Number of People Wounded By Event Outcome"
+  );
+
+ ## plot graph
+htmltools::div( ggplotly(plot), align="center" )
+```
+
+##### Density by Year
+
+We also wish to see if the density is increasing over time, and like before, the values follow each other closely. 
+
+```{r}
+plot <- ggplot(data=gtd.data.test) +
+  geom_density(aes(x=iyear,color=as.factor(wasLethal))) +
+  scale_x_continuous(trans='log10') +
+  graph_theme +
+  labs(
+    title = "Density Plot Year By Event Outcome"
+  );
+
+ ## plot graph
+htmltools::div( ggplotly(plot), align="center" )
+```
+
+
+
+
+
+
+
+# Reducing Variables of Interest 
+
+As there are quite a large number of variables, to reduce this with a semi-automated approach, I have fit a logistic regression model and used the forwards stepwise AIC function to select only significant variables. I then reviewed the outcome and selected my final feature set for modeling. Further time could be spent in feature engineering however, as a base level, this worked quite well as the variables I would expect remained in the dataset. 
+
+
+### Data Preperation
+```{r}
+training_prepared
+```
+
+
+
+```{r , eval=FALSE}
+
+#str(gtd.data.train)
+gtd.data.train.reduced <-  gtd.data.train %>% 
+  select(
+    gtd.explanatory, 
+    wasLethal
+  ) %>%
+mutate(
+  wasLethal = as.factor(wasLethal)
+)
+
+## Reduce Sample Size
+data <- sample_n(gtd.data.train.reduced, 50000)
+
+## Fit Logistic Reg
+model.logistic.v1 <- glm(wasLethal~ . , data = data , family = "binomial" )
+
+
+path <-
+  paste0("./01 Models/01 Tidy/" , "model_logistic_v1" , ".RData")
+
+#Export option
+save(model.logistic.v1 , file = path)
+
+```
+
+```{r}
+## Load models from file
+path <-  paste0("./01 Models/01 Tidy/" , "model_logistic_v1" , ".RData")
+model.logistic.v1 <- get(load(path))
+```
+
+
+### Review Logistic Regression Summary
+
+```{r}
+summary(model.logistic.v1 )
+```
+
+### Forward Stepwise Variable Selection 
+
+Due to the time of calcuation I have saved the models to a file once they have complete and then I can set the "eval = false" and load them back in. This saves a lot of time in compiling the report. 
+
+```{r}
+model.logistic.start <- glm(wasLethal~1 ,  data = data , family = "binomial" )
+```
+
+```{r}
+
+path <-
+  paste0("./01 Models/01 Tidy/" , "model_logistic_1_reduced" , ".RData")
+
+```
+
+
+```{r , eval=FALSE}
+
+model.logistic.1.reduced <- stats::step( model.logistic.start, scope = formula(model.logistic.v1)   , direction = "forward")
+
+#Export option
+save(model.logistic.1.reduced , file = path)
+
+```
+
+```{r}
+## Load models from file
+model.logistic.1.reduced <- get(load(path))
+```
+
+
+
+#### Review Final Model 
+
+The variables here are what would be expected. These features have been selected to be used in the modeling phase. 
+
+```{r}
+summary(model.logistic.1.reduced)
+
+```
+
+
+
+## Reduce Variables 
+
+Here I have selected my explainatory variables and used them to return the AUC values from the previous calculations. 
+As we can see, these values are the ones with the highest single variable AUC values.  
+
+```{r}
+
+
+gtd.explanatory.reduced <- c(
+  "wasLethal",
+  "attacktype1_txt",
+  "success",
+  "suicide",
+  "nwound",
+  "hostkidoutcome_txt",
+  "region_txt" ,
+  "targtype1_txt" ,
+  "weaptype1_txt" ,
+  "claimmode_txt",
+  "nperpcap",
+  "nreleased",
+  "nhostkid",
+  "individual",
+  "claimed"
+)
+
+setdiff(gtd.explanatory, gtd.explanatory.reduced)
+
+tb %>% arrange(desc(Test_AUC))
+```
+
+
+
+
+
+# Tidy Models 
+
+One thing that you find in coding is that there are many different ways of doing something, however the best way is the simplest. The way I consider this is not simplistic as the most direct, but the easiest for myself or others to understand. As such, I found the standard quirks of the R syntax irritating and have a fondness for the tidyverse. So what better way to model then to use a library that is built on these principles that allow an interface to many different packages and fine control. 
+
+Whilst this group of packages are new, there are a lot of great resources that can be followed. Things are still changing so some of the features get deprecated or their interface changed, however overall with the community behind it and its clear syntax (once you understand the parts) it is a great user experience.
+
+## Why Tidymodels 
+
+- lots of documentation & resources 
+- Supported by tidyverse and RStudio
+- Adheres to the Tidyverse patterns 
+- Provides a unified interface to many other platforms 
+- Simple to implement parallelization 
+- insulates data leaking from training and testing 
+- Transparent data at each stage allowing for further insights to be made
+
+
+
+## Tidy Models 
+
+The TidyModels is similar to the Tidyverse where it is a collection of different packages that can be either loaded in indiviually as needed or all together. The main packages of the tidy models are the following: 
+
+- rsample: sampling and splitting data for training, testing, or validation   
+- recipes: preprocessing data   
+- parsnip: specifying models   
+- yardstick: evaluating model performance   
+
+Other Usefull packages:  
+- tune: parameter tuning   
+- workflows: putting these processes together  
+
+
+
+## Installing Packages
+```{r}
+# load packages
+library(tidymodels)
+library(workflows)
+library(tune)
+```
+
+
+
+## Data Input Separation
+
+I have started by trying to separate concerns to make it easier to convert this process into a function later on. This however was not fully implemented and is something that will be refactored later. 
+
+```{r}
+data <- gtd.data.train.reduced
+```
+
+
+
+## Review Data Summary
+
+```{r}
+
+library(skimr)
+
+skim(data)
+
+```
+
+
+## Split the data 
+
+```{r}
+## Set Seed (using the same seed across packages)
+set.seed(123)
+
+## Split data for trainging and testing 
+gtd_data_split <- initial_split(data, 
+                                prop = 8/10)
+gtd_data_split
+```
+### Extract & Check Balance 
+
+In this process I will be splitting the data into testing and training rather than testing, training, and calibration The reason is that I will be implementing **cross folds validation** where the calibration set is established across multiple folds to ensure greater accuracy.
+
+```{r}
+## extract training and testing sets
+gtd_data_train <- training(gtd_data_split)
+gtd_data_test <- testing(gtd_data_split) ## Leave this data untouched until the end 
+
+
+tb <- tribble(
+  ~Group, ~Count, 
+  "training" , nrow(gtd_data_train), 
+  "testing" , nrow(gtd_data_test)
+)
+
+
+## Plot Data Balance 
+plot <- tb %>% ggplot(aes(x = Group, y = Count, fill = Group)) +
+  geom_bar(stat = "identity") +
+  graph_theme +
+  labs(
+    title = "Training & Test Balance"
+  )
+
+htmltools::div( ggplotly(plot), align="center" );
+```
+
+
+
+
+## Set Variables for Better Decoupling 
+
+Tidymodels relies on the formula input, to decouple this I have established a formula object that can be parsed in to functions when required. 
+
+Further work is required to set this up properly, however this provides a foundation. 
+
+
+```{r}
+gtd_data_clean <- data
+
+explanatory <- gtd.explanatory;
+
+response <- gtd.response
+
+
+## Create a fomula object 
+recipeformula <- as.formula(
+  paste(response, 
+       " .", 
+        sep = " ~ "))
+
+```
+
+
+
+
+
+## Defining A Recipe 
+
+A "Recipe" are the steps that will be followed before modeling. This is defining the variable roles such as response or explanatory variables, the pre-processing steps to run such as normalizing values and imputing null values. 
+
+This process contains two primary steps and are linked together with the pipes (%>%) of the tidyverse.
+
+1) Specify the formula used through the $recipe()$ function to identify response and explanatory variables. 
+
+2) Specify pre-processing using the $step_zzz()$ (where zzz is the step to run.)
+
+
+### Defining recipe
+
+The recipe only takes the names of the elements and the function syntax is very similar to lm() function. As it only takes the names, we can use the head of the dataset to speed up this process rather than parsing all the data. 
+
+
+In this recipe I have done the following:
+- Centered all variables that are not categorical 
+- Scaled the numeric variables to ensure that they do not cause weighting issues in modeling 
+- Set up Dummy Variables (One Hot Encoding) from factors 
+- Removed any variables with Zero Variance
+
+As you can see, using tidy model has a very simple interface to some very powerful data cleaning tasks. Each step also has further customization available with the ability to impute values through various methods as well. 
+
+This recipe defines how the data will be filtered in modeling however it has not actually applied anything to the data yet. 
+
+```{r}
+
+
+# define the recipe
+gtd_data_recipe <-
+  # parse in the data and the formula
+  recipe(
+     recipeformula , 
+     data = head(gtd_data_clean)
+    ) %>%
+  ## some pre-processing steps
+  # Here I am centering and scaling the non-nominal predictors  
+  step_center(all_predictors() , - all_nominal()) %>% 
+  step_scale(all_predictors() , - all_nominal()) %>% 
+  # Set up Dummy Vars - OneHotEncoding
+  step_dummy(
+    all_nominal(), - all_outcomes(), one_hot = TRUE
+  ) %>% 
+  ## Take out anything with 0 variance
+  step_zv(
+    all_numeric()
+  ) 
+
+
+
+gtd_data_recipe
+
+
+```
+
+### Extract Pre-processed data
+
+This step isn't necessary for modeling however it is very useful to check what is going on. 
+
+Juice function gets the data back out of the previous step. This is important for when using down sampling functions in preprocessing the data.
+
+I am also using this step so that the preprocessing is already done for when using parallelization to reduce the workload. 
+
+```{r}
+
+gtd_data_train_preprocessed <- gtd_data_recipe %>%
+  # apply the recipe to the training data
+  prep(gtd_data_train) %>%
+  # extract the pre-processed training dataset
+  juice()
+
+head(gtd_data_train_preprocessed)
+```
+
+### Apply to Testing Data 
+
+Once the data is preprocessed in the same way as the training data, this is put away until the final model is fit and used to analyze for under and over fitting. 
+
+```{r}
+
+gtd_data_test_preprocessed <- gtd_data_recipe %>%
+  # apply the recipe to the training data
+  prep(gtd_data_test) %>%
+  # extract the pre-processed training dataset
+  juice()
+
+head(gtd_data_test_preprocessed)
+
+```
+
+## Clean Naming 
+
+Some of the levels now that they have been converted to features have extremely long names, as such, I have shortened the worst of them. 
+
+```{r}
+gtd_data_train_preprocessed <- gtd_data_train_preprocessed %>%
+  rename(
+    weaptype1_txt_Vehicle = weaptype1_txt_Vehicle..not.to.include.vehicle.borne.explosives..i.e...car.or.truck.bombs. ,
+    hostkidoutcome_txt_Hostages.escaped = hostkidoutcome_txt_Hostage.s..escaped..not.during.rescue.attempt. ,
+    hostkidoutcome_txt_Hostages.killed = hostkidoutcome_txt_Hostage.s..killed..not.during.rescue.attempt.,
+    hostkidoutcome_txt_Hostages.released = hostkidoutcome_txt_Hostage.s..released.by.perpetrators,
+  )
+
+```
+
+
+### Data To Review 
+
+```{r}
+
+skim(gtd_data_train_preprocessed) %>% 
+  select(-starts_with("numeric.p")) # remove quartiles
+
+```
+
+
+
+
+## Modeling Functions 
+
+This section is just establishing some useful functions to save time and typing later on.
+
+### Establish Functions & Global 
+
+
+#### Save and Load Models 
+
+```{r}
+## Save models to file 
+save_model <-  function(model , name) {
+  path <-  paste0("./01 Models/01 Tidy/" , name , ".RData")
+
+  #Export option
+  save(model , file = path)
+}
+
+## Load models from file
+load_model <- function(name){
+  path <-  paste0("./01 Models/01 Tidy/" , name , ".RData")
+  get(load(path))
+}
+```
+
+
+####  Get Number of Cores 
+
+```{r}
+cores = parallel::detectCores()
+cores
+```
+
+
+### Set up metrics to return 
+
+
+```{r}
+model.tidy.metrics_set <- yardstick::metric_set(accuracy, sens, yardstick::spec, roc_auc , mn_log_loss, recall , f_meas )
+```
+
+
+#### Run Model Function 
+```{r}
+
+run_model <- function(data ,spec, fomula){
+  local_model <- spec %>% 
+  fit(fomula, 
+      data = data
+        )
+  
+  return(local_model)
+}
+
+```
+
+#### Run Model with Resamples Function 
+
+```{r}
+library(modeltime)
+
+run_model_resample <- function(model , recipeformula, splits) {
+  
+
+  parallel_start(parallel::detectCores() , .method = "parallel")
+
+  wf <- workflow() %>%
+    add_model(model) %>%
+    add_formula(recipeformula)
+  
+  local_res_model <- fit_resamples(
+    object =  wf,
+    resamples =  splits,
+    control = control_resamples(save_pred = T), 
+  metrics = model.tidy.metrics_set
+  )
+  
+  parallel_stop()
+  
+  return(local_res_model)
+}
+```
+
+
+
+
+
+
+#### Model Plots 
+
+
+###### Lift CUrve 
+```{r}
+
+tidy.plot.lift_curve <-function(model, name){
+  model %>% 
+   collect_predictions() %>% 
+    group_by(id) %>% 
+    lift_curve( wasLethal , .pred_FALSE ) %>% 
+    autoplot() +
+    graph_theme +
+    labs(title = paste0(
+      name,
+      ": Lift Curve"
+    ))
+
+}
+```
+
+
+###### Class probabilities vs Predictions 
+```{r}
+
+tidy.plot.class_probabilities_vs_predict <-  function(model , name) {
+  model %>% collect_predictions() %>% ## get predictions
+    select(.pred_FALSE , wasLethal) %>% ## Select base false and wasLethal data
+    mutate(.pred = 100 * .pred_FALSE) %>% ## Make predictions out of 100
+    select(-.pred_FALSE) %>% ## Drop previous column to keep pred and wasLethal
+    mutate(.pred = round(.pred / 5) * 5) %>%  ## round it to nearest 5
+    count(.pred, wasLethal) %>% # Count how many there were
+    pivot_wider(names_from = wasLethal, values_from = n) %>%  ## Restructure data to wide
+    mutate(prob = `FALSE` / (`FALSE` + `TRUE`)) %>% ## Get the proportion
+    mutate(prob = 100 * prob) %>% ## Make percentage
+    rename(prediction_precentage = .pred,
+           probability_percentage = prob) %>%
+    ggplot(aes(x = prediction_precentage, y = probability_percentage)) +
+    geom_point() +
+    geom_smooth() +
+    geom_abline() +
+    coord_fixed(xlim = c(0, 100) , ylim = c(0, 100))+
+    graph_theme +
+    labs(title = paste0(
+      name,
+      ": Probabilites vs Prediction"
+    ))
+}
+
+```
+
+###### Gain curve 
+
+```{r}
+tidy.plot.gain_curve <- function(model , name){
+  model %>% 
+  collect_predictions() %>% 
+  gain_curve(wasLethal , .pred_FALSE) %>% 
+  autoplot() +
+    graph_theme +
+    labs(title = paste0(
+      name,
+      ": Gain Curve"
+    ))
+}
+```
+
+
+###### Metrics over folds
+
+```{r}
+tidy.plot.metrics_over_folds <- function(model , name){
+  
+  model %>%
+    select(id , .metrics) %>%
+    unnest(.metrics) %>%
+    mutate(fold_id = as.numeric(str_replace(id, "Fold", ""))) %>%
+    ggplot(aes(x = fold_id, y = .estimate)) +
+    geom_point() +
+    geom_line() +
+    facet_wrap(~ .metric, scales = "free_y") +
+    graph_theme +
+    labs(title = paste0(
+      name,
+      ": Key Metrics Over Folds"
+    ))
+  
+  
+  
+}
+```
+
+###### Double Density Plot
+
+```{r}
+tidy.plot.double_density <- function(model, name){
+  
+  model %>% 
+  collect_predictions() %>% 
+  ggplot() +
+  geom_density(aes(x = .pred_FALSE, fill = wasLethal), 
+               alpha = 0.5)+
+    graph_theme +
+    labs(title = paste0(
+      name,
+      ": Double Densisty Plot"
+    ))
+  
+}
+```
+
+###### Heatmap
+```{r}
+tidy.plot.heatmap <-function(model , name ){
+  model %>% 
+   conf_mat_resampled(tidy=F) %>% 
+  autoplot(type="heatmap") +
+    graph_theme +
+    labs(title = paste0(
+      name,
+      ": Confusion Matrix Heatmap"
+    ))
+
+}
+```
+
+###### Roc Curve Resamples
+
+```{r}
+tidy.plot.roc_res_curves <- function(model , name){
+  model %>% 
+  collect_predictions() %>% 
+  group_by(id) %>% 
+  roc_curve(wasLethal, .pred_FALSE) %>% 
+  autoplot()+
+    graph_theme +
+    labs(title = paste0(
+      name,
+      ": ROC Plot"
+    ))
+}
+```
+
+
+###### Precision and Recall Curve Resamples
+```{r}
+tidy.plot.prec_recall <-  function(model , name){
+  model  %>%
+  collect_predictions( ) %>% 
+  group_by(
+    id
+  ) %>% 
+  pr_curve( .pred_FALSE ,  truth = wasLethal )%>%
+  ggplot(aes(x = recall, y = precision , colour=id)) +
+  geom_path() +
+  coord_equal()+
+    graph_theme +
+    labs(title = paste0(
+      name,
+      ": Precision and Recall Curve"
+    ))
+}
+```
+
+
+
+
+
+### Establish Data Collection Functions 
+
+
+
+#### Grouped Models
+```{r}
+grouped_models <-NULL
+
+all_models <- NULL
+
+all_model_data <- NULL
+
+```
+
+
+
+#### Model Logging Function 
+
+```{r}
+log_model <- function(model, name) {
+  
+
+  ## Get metrics from the resamples
+df <-
+  model %>% collect_metrics() %>% mutate(model = name) %>%
+  select(.metric , mean, model)
+
+
+## change data structure
+model_comp <-
+  df %>%
+  select(model, .metric, mean) %>%
+  pivot_wider(names_from = .metric, values_from = mean)
+
+## Log all data
+all_model_data <<- all_model_data %>% 
+  rbind(
+    model %>% 
+      collect_metrics( summarize = T) %>% 
+      mutate(
+        model = name
+      )
+  )
+
+## Bind this new row to all models
+  all_models <<- all_models %>%
+    rbind(model_comp)
+
+  
+  ## Add models to grouped models 
+  grouped_models <<- grouped_models %>%
+    bind_rows(model %>%
+                unnest(.predictions) %>%
+                mutate(model = name))
+}
+```
+
+
+
+## Set Up Cross Validation
+
+Due to the size of the data and the amount of computing power required I will be using 5 data partitions with only 1 repeat. For further accuracy this can be increased at the expense of compute time. 
+
+Using strata means the data is divide evenly by response variable - here it is not so applicable as the classes are relatively balanced. 
+
+```{r}
+set.seed(123)
+
+# create CV object from training data
+validation_splits <- vfold_cv(gtd_data_train_preprocessed , v = 5,  repeats=1 ,  strata = response )
+
+
+```
+
+
+
+
+
+
+
+## Models
+
+
+##### Specifying Models
+
+Using the $parsnip$ package we can fit a variety of models in R all through the same interface making it easy to test various options, benchmarking them, and selecting the best performer.
+
+It is important to note however that certain models have more specific requirements and would require changes to the preprocessing and the hyperparameters to ensure the best model is being compared.
+
+The core elements of the modeling phase are:
+1) model Type
+2) arguments
+3) engine
+4) mode
+
+
+## Model 1: KKnn
+
+The Knn model fit the data relatively will with reasonable values across the key metrics. The model had some issues with classifying borderline values however the confusion matrix is pretty balanced. We can again see the bump in the precision and recall curve highlighting that the model struggled here. Again this is further evident in the probabilities vs prediction plot. 
+
+### Set up model
+```{r}
+knn_spec <- nearest_neighbor() %>% 
+  set_engine("kknn" ) %>% 
+  set_mode("classification") 
+```
+
+### Run Model 
+
+```{r}
+
+# models.tidy.knn <- run_model(gtd_data_train_preprocessed , knn_spec, recipeformula )
+
+```
+
+### View Model Output
+```{r}
+# models.tidy.knn
+
+```
+
+
+### Resampling Cross Validation 
+
+
+```{r , eval=FALSE}
+
+models.tidy.knn_res <- run_model_resample(knn_spec, recipeformula , validation_splits)
+
+## Save Model
+save_model( models.tidy.knn_res, "models.tidy.knn_res")
+
+```
+
+#### Load Model
+
+```{r}
+
+models.tidy.knn_res <- load_model("models.tidy.knn_res")
+
+```
+
+### Review Metrics
+```{r}
+
+models.tidy.knn_res %>% 
+   collect_metrics( summarize = T) 
+
+```
+
+
+
+### Plot Model & Add to Grouped Models
+
+```{r}
+
+## Specify model 
+model <- models.tidy.knn_res
+name <- "kknn"
+
+
+## Create Plots
+
+p <- ggplotly(tidy.plot.metrics_over_folds(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.double_density(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.roc_res_curves(model, name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.class_probabilities_vs_predict(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.lift_curve(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.gain_curve(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.heatmap(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.prec_recall(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.roc_res_curves(model , name))
+
+
+
+## Add to Grouped Models 
+log_model(model, name)
+
+
+```
+
+
+
+
+
+
+
+## Model 2: Random Forest
+
+The random forest model looks very good with a clean ROC curve, high metrics, balanced probabilities vs predictions and confusion matrix. 
+
+### Set up model
+```{r}
+rf_spec <- rand_forest() %>% 
+  set_engine("ranger" ) %>% 
+  set_mode("classification") 
+```
+
+### Run Model 
+
+```{r}
+
+# models.tidy.rf <- run_model(gtd_data_train_preprocessed ,rf_spec, recipeformula )
+
+```
+
+
+###### View Model Output
+```{r}
+# models.tidy.rf
+
+```
+
+
+
+### Resampling Cross Validation Workflow Test
+
+```{r , eval=FALSE}
+
+models.tidy.rf_res <- run_model_resample(rf_spec, recipeformula , validation_splits)
+
+## Save Model
+save_model( models.tidy.rf_res, "models.tidy.rf_res")
+
+```
+
+
+
+#### Load Model
+
+```{r}
+
+models.tidy.rf_res <- load_model("models.tidy.rf_res")
+
+
+```
+
+### Review Metrics
+```{r}
+
+models.tidy.rf_res %>% 
+   collect_metrics( summarize = T) 
+
+```
+
+
+###Plot Model & Add to Grouped Models
+
+```{r}
+
+## Specify model 
+model <- models.tidy.rf_res
+name <- "RandForest"
+
+## Create Plots
+
+p <- ggplotly(tidy.plot.metrics_over_folds(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.double_density(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.roc_res_curves(model, name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.class_probabilities_vs_predict(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.lift_curve(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.gain_curve(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.heatmap(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.prec_recall(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.roc_res_curves(model , name))
+
+
+## Add to Grouped Models 
+log_model(model, name)
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+## Model 3: Decision Tree
+
+The decision tree looks like it struggled to correctly fit the data, this may be due to incorrect set up of features and parameters, further work may be required to review this. 
+
+### Set up model
+```{r}
+dec_tree_spec <-  decision_tree() %>% 
+  set_engine("rpart" ) %>% 
+  set_mode("classification")
+
+```
+
+### Run Model 
+```{r}
+
+# models.tidy.dec_tree <- run_model(gtd_data_train_preprocessed ,dec_tree_spec, recipeformula )
+
+
+```
+
+###View Model Output
+
+```{r}
+# models.tidy.dec_tree
+```
+
+### Resampling Cross Validation Workflow Test
+
+```{r , eval=FALSE}
+
+models.tidy.dec_tree_res <- run_model_resample(dec_tree_spec, recipeformula , validation_splits)
+
+## Save Model
+save_model( models.tidy.dec_tree_res, "models.tidy.dec_tree_res")
+
+```
+
+#### Load Model
+
+```{r}
+
+models.tidy.dec_tree_res <- load_model("models.tidy.dec_tree_res")
+
+```
+
+### Review Metrics
+```{r}
+
+models.tidy.dec_tree_res %>% 
+   collect_metrics( summarize = T) 
+
+```
+
+
+### Plot Model & Add to Grouped Models
+
+```{r}
+
+## Specify model 
+model <- models.tidy.dec_tree_res
+name <- "dec_tree"
+
+## Create Plots
+
+p <- ggplotly(tidy.plot.metrics_over_folds(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.double_density(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.roc_res_curves(model, name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.class_probabilities_vs_predict(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.lift_curve(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.gain_curve(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.heatmap(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.prec_recall(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.roc_res_curves(model , name))
+
+
+
+## Add to Grouped Models 
+log_model(model, name)
+
+
+```
+
+
+
+
+
+## Model 3: Logistic Regression
+
+The logistic regression model looks to fit relatively well with a balanced confusion matrix and a clean ROC curve. However it did under perform compared to the random forest model. 
+
+### Set up model
+```{r}
+log_glm_spec <-  parsnip::logistic_reg() %>% 
+  set_engine("glm" ) %>% 
+  set_mode("classification")
+
+```
+
+### Run Model 
+```{r}
+
+# models.tidy.log_glm <- run_model(gtd_data_train_preprocessed ,dec_tree_spec, recipeformula )
+
+```
+
+### View Model Output
+
+```{r}
+# models.tidy.log_glm
+```
+
+### Resampling Cross Validation Workflow Test
+
+
+```{r , eval=FALSE}
+
+models.tidy.log_glm_res <- run_model_resample(log_glm_spec, recipeformula , validation_splits)
+
+## Save Model
+save_model( models.tidy.log_glm_res, "models.tidy.log_glm_res")
+
+```
+
+#### Load Model
+
+```{r}
+
+models.tidy.log_glm_res <- load_model("models.tidy.log_glm_res")
+
+```
+
+### Review Metrics
+```{r}
+
+models.tidy.log_glm_res %>% 
+   collect_metrics( summarize = T) 
+
+```
+
+### Plot Model & Add to Grouped Models 
+
+```{r}
+## Specify model 
+model <- models.tidy.log_glm_res
+name <- "log_glm"
+
+## Create Plots
+
+p <- ggplotly(tidy.plot.metrics_over_folds(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.double_density(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.roc_res_curves(model, name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.class_probabilities_vs_predict(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.lift_curve(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.gain_curve(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.heatmap(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.prec_recall(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.roc_res_curves(model , name))
+
+
+
+## Add to Grouped Models 
+log_model(model, name)
+
+```
+
+
+
+
+
+
+## Model 4: Naive Bayes
+
+The Naive Bayes model obviously did not fit correctly out of the box, as such tuning of the parameters would be required and will be explored later in the worksets exploration of the tidy models workflow. We can see a very imbalanced confusion matrix with many false positives. The F-1 Score was 0.27 and the sensitivity was 0.16 - this is very poor. 
+
+### Set up model
+```{r}
+library(discrim)
+
+n_bayes_spec <-  discrim::naive_Bayes() %>% 
+  set_engine("klaR" ) %>% 
+  set_mode("classification")
+
+```
+
+### Run Model 
+```{r}
+
+# models.tidy.n_bayes <- run_model(gtd_data_train_preprocessed ,n_bayes_spec, recipeformula )
+
+
+```
+
+### View Model Output
+
+```{r}
+# models.tidy.n_bayes
+```
+
+### Resampling Cross Validation Workflow Test
+
+
+```{r , eval=FALSE}
+
+models.tidy.n_bayes_res <- run_model_resample(n_bayes_spec, recipeformula , validation_splits)
+
+## Save Model
+save_model( models.tidy.n_bayes_res, "models.tidy.n_bayes_res")
+
+```
+
+#### Load Model
+
+```{r}
+
+models.tidy.n_bayes_res <- load_model("models.tidy.n_bayes_res")
+
+```
+
+### Review Metrics
+```{r}
+
+models.tidy.n_bayes_res %>% 
+   collect_metrics( summarize = T) 
+
+```
+
+### Plot Model & Add to Grouped Models
+
+```{r}
+## Specify model 
+model <- models.tidy.n_bayes_res
+name <- "n_bayes"
+
+## Create Plots
+
+p <- ggplotly(tidy.plot.metrics_over_folds(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.double_density(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.roc_res_curves(model, name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.class_probabilities_vs_predict(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.lift_curve(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.gain_curve(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.heatmap(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.prec_recall(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.roc_res_curves(model , name))
+
+
+
+## Add to Grouped Models 
+log_model(model, name)
+
+```
+
+
+
+
+## Model 5: XGBoost
+
+For the XGBoost model, I implemented the tuning functions and used this to fit the model properly and ensure the best hyperparameters (within the limited testing due to computational load) were selected. 
+
+As a result of tuning, the model performed significantly better with a high ROC score of 0.9123, just shy of the Random Forest's. 
+
+### Set up model
+```{r}
+
+boost_tree_spec <-  boost_tree(
+  trees = 1000,
+  tree_depth = tune(),
+  min_n = tune(),
+  loss_reduction = tune(),
+  sample_size = tune(),
+  mtry = tune(),
+  learn_rate = tune()
+) %>%
+  set_engine("xgboost") %>%
+  set_mode("classification")
+
+```
+
+### Set up Tune Parameters
+
+Space Filling parameter Grid 
+
+```{r}
+xgb_grid <- grid_latin_hypercube(
+  tree_depth (),
+  min_n(),
+  loss_reduction(),
+  
+  sample_size = sample_prop(),
+  finalize(mtry(), gtd_data_train_preprocessed),
+  learn_rate(),
+  size = 10
+)
+
+xgb_grid
+```
+
+
+
+
+### Model Workflow
+```{r}
+
+
+boost_tree_wf <- workflow() %>%
+  add_formula(recipeformula) %>%
+  add_model(boost_tree_spec)
+
+boost_tree_wf
+
+# models.tidy.dec_tree
+```
+
+
+
+
+### View Model Output
+
+
+### Tuning the model
+```{r}
+vb_folds <- vfold_cv(gtd_data_train_preprocessed , strata = response,  v = 3 , repeats = 1)
+
+
+```
+
+
+
+```{r , eval=FALSE }
+
+
+parallel_start(parallel::detectCores() , .method = "parallel")
+
+
+boost_tree_res_tuning <- tune_grid(
+  boost_tree_wf,
+  resamples = vb_folds,
+  grid = xgb_grid,
+  control = control_grid(save_pred = T) ,
+  metrics = model.tidy.metrics_set
+)
+
+
+parallel_stop()
+
+## Save Model
+save_model(boost_tree_res_tuning, "boost_tree_res_tuning")
+
+```
+
+#### Load Model
+
+```{r}
+
+xgb_res.tuning <- load_model("boost_tree_res_tuning")
+
+```
+
+### Plot Tuning Parameters
+
+This plot shows how the different values of the tuning parameter impacts the ROC values. This is good to reference however we will programmatically select the best set of parameters. 
+
+
+```{r}
+
+ggplotly(xgb_res.tuning %>%
+  collect_metrics() %>%
+  filter(.metric == "roc_auc") %>%
+  select(
+    mean,
+    mtry:sample_size
+  ) %>%
+  pivot_longer(mtry:sample_size,
+               names_to = "parameter",
+               values_to = "value"
+               ) %>%
+  ggplot(aes(value, mean, colour = parameter)) +
+  geom_point(show.legend = F) +
+  facet_wrap(~parameter, scales = "free_x") +
+  theme(
+   plot.title = element_text(size = 14, hjust = 0.5 , margin = margin(5,5,0,5) ),
+    legend.position = "none"
+  ) +
+    labs(
+      title = "XGBoost: Tuning Parameters"
+    )
+)
+
+
+```
+
+
+
+#### Show Best Model 
+
+```{r}
+
+show_best(xgb_res.tuning , "roc_auc")
+
+```
+
+
+### Select Best Model 
+
+```{r}
+
+best_auc <- select_best(xgb_res.tuning , "roc_auc")
+
+xgboost_wf <- finalize_workflow(boost_tree_wf , best_auc)
+
+```
+
+
+
+### Fit Best Model
+
+```{r , eval=FALSE}
+# best_model
+parallel_start(parallel::detectCores() , .method = "parallel")
+
+
+models.tidy.xgboost_res <- fit_resamples(
+    object =  xgboost_wf,
+    resamples =   validation_splits,
+    control = control_resamples(save_pred = T), 
+    metrics = model.tidy.metrics_set
+)
+
+parallel_stop()
+
+save_model(models.tidy.xgboost_res , "models.tidy.xgboost_res")
+
+```
+
+
+#### Load Model
+```{r}
+models.tidy.xgboost_res <- load_model("models.tidy.xgboost_res")
+```
+
+### Review Metrics
+```{r}
+
+models.tidy.xgboost_res %>% 
+   collect_metrics( summarize = T) 
+
+```
+
+
+
+### Plot & Add To Grouped Models
+```{r}
+
+model <- models.tidy.xgboost_res
+name <- "XGBoost"
+## Create Plots
+
+p <- ggplotly(tidy.plot.metrics_over_folds(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.double_density(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.roc_res_curves(model, name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.class_probabilities_vs_predict(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.lift_curve(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.gain_curve(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.heatmap(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.prec_recall(model , name))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(tidy.plot.roc_res_curves(model , name))
+
+
+
+
+## Add to Grouped Models 
+log_model(model, name)
+
+```
+
+
+
+
+
+
+## Compare Models 
+
+
+
+
+### Review All Collected Model Data
+
+By logging the models throughout the process we have all the data available to us to plot and review.
+
+```{r}
+all_model_data 
+
+```
+
+### Review All models data frame
+
+We also have a summary of all the data by model with each values standard error. We can then plot this to compare the models. 
+
+```{r}
+
+all_models %>%
+  arrange(
+    roc_auc
+  )
+
+```
+
+### Plot Model's Mean ROC and Standard Error 
+
+```{r}
+all_model_data %>% 
+  filter(
+    .metric == "roc_auc"
+  ) %>% 
+  mutate(
+    model = fct_reorder(model, mean) 
+  )%>% 
+  ggplot(aes(x = model , colour=model)) + 
+  geom_point(aes(y = mean)) + 
+  geom_errorbar(aes(ymin = mean-std_err, ymax = mean+std_err), width = .1) +
+  labs(x = NULL, y = "ROC" ) +
+  graph_theme +
+  theme(
+    legend.position = "none"
+  ) +
+    labs(
+      title = "All Models ROC Mean & Standard Error"
+    )
+  
+```
+
+
+
+### Plot All Models' ROC Plot
+
+
+```{r}
+
+p <- ggplotly( grouped_models %>% 
+  group_by(model) %>% 
+  roc_curve(
+    #true column
+    wasLethal, 
+    #colmn with probability
+    .pred_FALSE
+  ) %>% 
+  autoplot() +
+  graph_theme +
+    labs(
+      title = "All Models Mean ROC Curve"
+    ))
+
+```
+
+
+
+### Plot Model Metrics & Compare
+
+```{r}
+all_models
+
+# show mean Mean roc_auc for every model
+p <- ggplotly(all_models %>% 
+  arrange(accuracy) %>% 
+  mutate(model = fct_reorder(model, roc_auc)) %>% # order results
+  ggplot(aes(model, roc_auc, fill=model)) +
+  geom_col() +
+  coord_flip() +
+  scale_fill_brewer(palette = "Blues") +
+   geom_text(
+     size = 3,
+     aes(label = round(roc_auc, 2), y = roc_auc + 0.08),
+     vjust = 1
+  )+
+  graph_theme +
+  theme(
+    legend.position = "none"
+  ) +
+    labs(
+      title = "All Models: ROC AUC"
+    ))
+htmltools::div( p , align="center" );
+
+# show mean Mean accuracy for every model
+p <- ggplotly(all_models %>% 
+  arrange(accuracy) %>% 
+  mutate(model = fct_reorder(model, accuracy)) %>% # order results
+  ggplot(aes(model, accuracy, fill=model)) +
+  geom_col() +
+  coord_flip() +
+  scale_fill_brewer(palette = "Blues") +
+   geom_text(
+     size = 3,
+     aes(label = round(accuracy, 2), y = accuracy + 0.08),
+     vjust = 1
+  )+
+  graph_theme+
+  theme(
+    legend.position = "none"
+  ) +
+    labs(
+      title = "All Models: Mean Accuracy"
+    ))
+htmltools::div( p , align="center" );
+
+# show mean Mean recall for every model
+p <- ggplotly(all_models %>% 
+  arrange(recall) %>% 
+  mutate(model = fct_reorder(model, recall)) %>% # order results
+  ggplot(aes(model, recall, fill=model)) +
+  geom_col() +
+  coord_flip() +
+  scale_fill_brewer(palette = "Blues") +
+   geom_text(
+     size = 3,
+     aes(label = round(recall, 2), y = recall + 0.08),
+     vjust = 1
+  )+
+  graph_theme+
+  theme(
+    legend.position = "none"
+  ) +
+    labs(
+      title = "All Models: Mean Recall"
+    ))
+htmltools::div( p , align="center" );
+
+# show mean Mean f_meas for every model
+p <- ggplotly(all_models %>% 
+  arrange(f_meas) %>% 
+  mutate(model = fct_reorder(model, f_meas)) %>% # order results
+  ggplot(aes(model, f_meas, fill=model)) +
+  geom_col() +
+  coord_flip() +
+  scale_fill_brewer(palette = "Blues") +
+   geom_text(
+     size = 3,
+     aes(label = round(f_meas, 2), y = f_meas + 0.08),
+     vjust = 1
+  )+
+  graph_theme+
+  theme(
+    legend.position = "none"
+  ) +
+    labs(
+      title = "All Models: Mean F1 Score"
+    ))
+htmltools::div( p , align="center" );
+
+```
+
+
+
+## Modelling Conclusion 
+
+In all the above metrics the Random Forest model performs the best and significantly better than any single variable models. 
+
+This model is therefore selected to fit to the testing set to determine if there is over or under fitting and if the model generalizes well to the new data. 
+
+
+
+
+
+# Tidy Models, Workflow Set & Tuning  
+
+Whilst the previous method was valid, only running a single model with hyperparameter tuning does not yield the best results, nor does it allow for a comparisons to be made. Upon further research into how to fit and tune multiple models using tidymodels, the workflow set was discovered. In this section I will be using it to fit multiple models and tune their hyperparameters. 
+
+
+## Models
+Again we establish the model specificaiton, however in this case we call the hyperparameters and set the values to "tune()" which tells the modeling engine that these parameters are flagged for tuning. 
+
+```{r}
+library(baguette)
+
+bag_tree_rpart_spec <-
+  baguette::bag_tree() %>%
+  set_engine('rpart') %>%
+  set_mode('classification')
+
+boost_tree_xgboost_spec <-
+  boost_tree(tree_depth = tune(), trees = tune(), learn_rate = tune(), min_n = tune(), loss_reduction = tune(), sample_size = tune(), stop_iter = tune()) %>%
+  set_engine('xgboost') %>%
+  set_mode('classification')
+
+decision_tree_rpart_spec <-
+  decision_tree(tree_depth = tune(), min_n = tune(), cost_complexity = tune()) %>%
+  set_engine('rpart') %>%
+  set_mode('classification')
+
+logistic_reg_glm_spec <-
+  logistic_reg() %>%
+  set_engine('glm')
+
+naive_Bayes_naivebayes_spec <-
+  discrim::naive_Bayes(smoothness = tune(), Laplace = tune()) %>%
+  set_engine('naivebayes')
+
+nearest_neighbor_kknn_spec <-
+  nearest_neighbor(neighbors = tune(), weight_func = tune(), dist_power = tune()) %>%
+  set_engine('kknn') %>%
+  set_mode('classification')
+
+rand_forest_randomForest_spec <-
+  rand_forest(mtry = tune(), min_n = tune()) %>%
+  set_engine('randomForest') %>%
+  set_mode('classification')
+
+```
+
+### Define Recipes & Clean Data 
+
+Then we establish a workflow.
+
+
+```{r}
+# define the recipe
+gtd_data_recipe <-
+  # parse in the data and the formula
+  recipe(
+     wasLethal ~ . , 
+     data = !! head(gtd_data_clean)
+    ) %>%
+  step_center(all_predictors() , - all_nominal()) %>% 
+  step_scale(all_predictors() , - all_nominal()) %>% 
+  ## and some pre-processing steps
+  # Set up Dummy Vars - OneHotEncoding
+  step_dummy(
+    all_nominal(), -all_outcomes(), one_hot = TRUE
+  ) %>% 
+  ## Imputing all predictors using Knn
+  step_knnimpute(
+    all_predictors()
+    ) %>% 
+  ## Take out anything with 0 varience
+  step_zv(
+    all_numeric()
+  ) 
+
+gtd_data_recipe
+
+```
+
+
+
+### Establish Workflow Set
+
+These are then combined into a workflow set which allows them to be fit to multiple models. 
+
+```{r}
+
+normalized_rec <- recipe(wasLethal ~ ., data =  gtd_data_train_preprocessed ,  importance = TRUE) 
+ 
+normalized <- 
+   workflow_set(
+      preproc = list(normalized =  normalized_rec), 
+      models = list(rand_forest_randomForest_spec = rand_forest_randomForest_spec, 
+                    nearest_neighbor_kknn_spec = nearest_neighbor_kknn_spec, 
+                    naive_Bayes_naivebayes_spec = naive_Bayes_naivebayes_spec, 
+                    logistic_reg_glm_spec = logistic_reg_glm_spec,
+                    decision_tree_rpart_spec = decision_tree_rpart_spec,
+                    boost_tree_xgboost_spec = boost_tree_xgboost_spec,
+                    bag_tree_rpart_spec = bag_tree_rpart_spec
+                    )
+      
+   )
+
+normalized
+```
+### Check Workflows by Extracting by Name
+
+These can be extracted one by one to inspect what is going to be applied. 
+
+```{r}
+normalized %>% extract_workflow(id = "normalized_decision_tree_rpart_spec")
+```
+
+
+### Setup Models and Cross Folds
+
+Cross fold validation is again set up. In this case I am using a very low number as this process is very computationally expensive and will take a long time. This can be increased later on. 
+
+
+```{r}
+library(tidymodels)  # Includes the workflows package
+
+tidymodels_prefer()
+
+tidy_folds <- 
+   vfold_cv(gtd_data_train_preprocessed, strata = wasLethal, repeats = 1 , breaks = 5)
+
+```
+
+
+
+### Run Tuning & Cross Fold Validation
+
+Next we ensure we are running in parallel, we set up a tune grid with a race control which uses a process to reduce the number of calculations in the tuning space saving a lot of time. 
+
+Then we fit and run the process and save out the model. 
+
+```{r , eval=FALSE}
+library(finetune)
+
+## Set up parallel processing 
+
+parallel_start(parallel::detectCores() , .method = "parallel")
+
+## Set up race control to reduce computation requirements
+race_ctrl <-
+   control_race(
+      save_pred = TRUE,
+      parallel_over = "everything",
+      save_workflow = TRUE , 
+   )
+
+##    *WARNING* This process takes a long time
+## Fits the workflows and runs the tuning with reduced grid search
+race_results <-
+   normalized %>%
+   workflow_map(
+      "tune_race_anova",
+      seed = 1503,
+      resamples = tidy_folds,
+      grid = 5,
+      control = race_ctrl
+   )
+
+
+parallel_stop()
+
+## As this takes a very long time, it is essential to save the results 
+save_model(race_results , "Tidy_Tuded_Results")
+```
+
+#### Load Results
+
+We can then load them back in
+```{r}
+## Loads the completed model from the file to save time 
+race_results <- load_model("Tidy_Tuded_Results")
+```
+
+
+#### Remove Error in Processing 
+
+Whilst calculating there was an error in the Naive Bayse model. This was therefore removed as to remidy and run this process again will take a very long time. 
+
+```{r}
+## On review there was an issue in the Naive Bayes Model 
+## as such, this model was dropped from the testing 
+model_results <- race_results %>% 
+  filter(
+    wflow_id != "normalized_naive_Bayes_naivebayes_spec"
+  )
+```
+
+## Review Fitted Models 
+
+### Get the model Metrics 
+
+Here we can see again that the Random Forest is performing better than the other models however it is hard to tell exactly how much better as all the folds are evident. 
+
+```{r}
+##  Collect Metrics 
+summerized_metrics <-model_results %>% 
+  collect_metrics(summerize = T) %>% 
+  select(
+    model, 
+    .config, 
+    .metric, 
+    mean, 
+    std_err
+    
+  ) %>% 
+  filter(
+    .metric == "roc_auc"
+  ) %>% 
+  arrange(
+   desc(mean) 
+  )
+
+summerized_metrics
+
+```
+
+
+
+### Plot ROC Curves
+
+The tree models seem to be performing better on the ROC curve with the exception of the boost tree. 
+
+```{r}
+
+## Plot the models ROC Curves 
+p <- ggplotly(model_results %>% 
+  collect_predictions() %>%
+  group_by(wflow_id) %>%
+  roc_curve(wasLethal, .pred_FALSE) %>%
+  autoplot()+
+  graph_theme+
+    labs(
+      title = "All Models: ROC Curve"
+    ))
+
+htmltools::div( p , align="center" );
+
+```
+
+### Plot ROC for each model with Confidence Intervals 
+
+The results are much clearer when plotting the averages with the standard error. Here we can see the random forest is significantly better than the others. 
+
+```{r}
+autoplot(
+   model_results,
+   rank_metric = "roc_auc",  
+   metric = "roc_auc"
+)+
+  graph_theme +
+    labs(
+      title = "All Models: Workflow Rank for Mean ROC & Standard Error"
+    )
+
+```
+
+
+### Plot Each Fold with ROC Value and Confidence 
+
+We can also review how each tuning parameter went across the folds to see the consistancy in the models. 
+
+```{r}
+
+model_metrics <-model_results %>% 
+  collect_metrics()
+
+data <- model_metrics %>% 
+   filter(
+    .metric == "roc_auc" &
+    mean > 0.75
+  ) %>% 
+  arrange(mean) %>% 
+  mutate(
+    Rank = row_number(-mean)
+  )
+
+
+data %>% 
+  ggplot(aes(x = Rank , y = mean , color = fct_reorder(model, mean) )) + 
+  geom_point() + 
+  geom_errorbar(aes(ymin = mean-std_err, ymax = mean+std_err), width = .1) +
+  labs(x = "Workflow Rank", y = "ROC_AUC Value" ) +
+  graph_theme +
+    labs(
+      title = "All Models & Tuning Values: ROC Value"
+    )
+
+
+
+```
+
+
+
+## Post Hoc Analysis of Resampling 
+
+To better understand and compare the models the process of post hoc analysis has been used to fit distributions that will allow us to effectively compare the models against each otehr for practical equivalence. 
+
+
+
+```{r}
+library(tidyposterior)
+
+doParallel::registerDoParallel(cores = 12)
+
+
+
+set.seed(246)
+acc_model_eval <- tidyposterior::perf_mod( model_results, metric = "accuracy", iter = 300)
+```
+### Plotting the Post Hoc Distributions
+
+On the plots we can see that the random tree is significantly better with no overlap of the other models. However if this was closer, we can use the following processes to determine which is better. 
+
+
+```{r}
+#Extract Results from Posterior Analysis and Visualise Distributions
+p <- ggplotly( acc_model_eval %>% 
+  tidy() %>% 
+  mutate(model = fct_inorder(model)) %>% 
+  ggplot(aes(x=posterior)) +
+   geom_histogram(bins = 50) +
+   facet_wrap(~model,  ncol = 2) +
+   labs(title = "Comparison of Posterior Distributions of Model Recipe Combinations", x = expression(paste("Posterior for Mean Accuracy")), y = "") +
+  graph_theme+
+  theme(
+    legend.position = "none"
+  ) +
+    labs(
+      title = "All Models: Post Hoc Distributions"
+    ))
+htmltools::div( p , align="center" );
+
+```
+
+### compare Bag Tree with Random Forest 
+
+
+```{r}
+#Compare Two Models - Difference in Means
+mod_compare <- contrast_models(acc_model_eval,
+                            list_1 = "normalized_rand_forest_randomForest_spec",
+                            list_2 = "normalized_bag_tree_rpart_spec")
+```
+
+
+```{r}
+mod_compare %>% summary()
+```
+
+
+```{r}
+a1 <-ggplotly( mod_compare %>% 
+  as_tibble() %>% 
+  ggplot(aes(x=difference)) +
+  geom_histogram(bins = 50, col = "white", fill = "#73D055FF")+
+  geom_vline(xintercept = 0, lty = 2) +
+  scale_fill_viridis_b()+
+  labs(x= "Posterior for Mean Difference in Accuracy", y="", title = "Posterior Mean Difference BagTree & Random Forest")+
+  graph_theme+
+  theme(
+    legend.position = "none"
+  ) )
+
+a2 <- ggplotly( acc_model_eval %>% 
+  tidy() %>% mutate(model = fct_inorder(model)) %>% 
+  filter(model %in% c("normalized_bag_tree_rpart_spec", "normalized_rand_forest_randomForest_spec")) %>% 
+  ggplot(aes(x=posterior)) +
+  geom_histogram(bins = 50, col = "white", fill = "#73D055FF") +
+  scale_colour_viridis_b() +
+  facet_wrap(~model, nrow = 2, ncol = 1) +
+  labs(title = "Comparison of Posterior Distributions", x = expression(paste("Posterior for Mean Accuracy")), y = "")+
+  graph_theme+
+  theme(
+    legend.position = "none"
+  ) )
+
+htmltools::div( a2 , align="center" );
+htmltools::div( a1 , align="center" );
+
+```
+
+
+
+
+
+### compare Kknn with Random Forest 
+
+```{r}
+#Compare Two Models - Difference in Means
+mod_compare <- contrast_models(acc_model_eval,
+                            list_1 = "normalized_rand_forest_randomForest_spec",
+                            list_2 = "normalized_nearest_neighbor_kknn_spec")
+```
+
+
+```{r}
+mod_compare %>% summary()
+```
+
+
+
+
+
+
+```{r}
+a1 <-ggplotly( mod_compare %>% 
+  as_tibble() %>% 
+  ggplot(aes(x=difference)) +
+  geom_histogram(bins = 50, col = "white", fill = "#73D055FF")+
+  geom_vline(xintercept = 0, lty = 2) +
+  scale_fill_viridis_b()+
+  labs(x= "Posterior for Mean Difference in Accuracy", y="", title = "Posterior Mean Difference KKnn & Random Forest")+
+  graph_theme+
+  theme(
+    legend.position = "none"
+  ) )
+
+
+a2 <-ggplotly(acc_model_eval %>% 
+  tidy() %>% mutate(model = fct_inorder(model)) %>% 
+  filter(model %in% c("normalized_bag_tree_rpart_spec", "normalized_rand_forest_randomForest_spec")) %>% 
+  ggplot(aes(x=posterior)) +
+  geom_histogram(bins = 50, col = "white", fill = "#73D055FF") +
+  scale_colour_viridis_b() +
+  facet_wrap(~model, nrow = 2, ncol = 1) +
+  labs(title = "Comparison of Posterior Distributions", x = expression(paste("Posterior for Mean Accuracy")), y = "")+
+  graph_theme+
+  theme(
+    legend.position = "none"
+  ) )
+
+htmltools::div( a2 , align="center" );
+htmltools::div( a1 , align="center" );
+```
+
+### Plot Practical Equivalence 
+
+By plotting these values we can compare models, workflows, and feature sets to better understand how changes effect our modelling. In this example it is not so applicabale however the process has been done for completeness and reference later on. 
+
+
+```{r}
+#Pluck and modify underlying tibble from autoplot()
+p <- ggplotly (autoplot(acc_model_eval, type = "ROPE", size = 0.02) %>% 
+  pluck("data") %>% 
+  mutate(rank = row_number(-pract_equiv)) %>% 
+  arrange(rank) %>% 
+  separate(model, into = c("Recipe", "Model_Type"), sep = "_", remove = F, extra = "merge") %>% 
+  ggplot(aes(x=rank, y= pract_equiv, color = Model_Type, shape = Recipe)) +
+   geom_point(size = 5) +
+   scale_colour_viridis_d() +
+   labs(y= "Practical Equivalance", x = "Workflow Rank", size = "Probability of Practical Equivalence", color = "Model Type", title = "Practical Equivalence of Workflow Sets", subtitle = "Calculated Using an Effect Size of 0.02")+
+  graph_theme 
+ )
+htmltools::div( p , align="center" );
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Fit Final Model & Test
+
+From all our testing we can see that the random forest model is the best fitting of the training data, and as such, we can now fit it to the testing data to see how well it generalizes. 
+
+
+## Retreive the Best Model by Resul, Fit Training Data & Predict Test Set
+
+We use th following functions to extract the best parameters and workflow, fit it to the training data in its entirety and then use it to predict the test set. 
+
+```{r  , eval = FALSE}
+#Pull Best Performing Hyperparameter Set From workflow_map Object
+best_result <- model_results %>% 
+  pull_workflow_set_result("normalized_rand_forest_randomForest_spec") %>% 
+  select_best(metric = "roc_auc")
+
+
+#Finalise Workflow Object With Best Parameters
+dt_wf <- model_results %>% 
+  pull_workflow("normalized_rand_forest_randomForest_spec") %>% 
+  finalize_workflow(best_result)
+
+## *Warning* This will take a while
+## Fit Workflow Object to Training Data and Predict Using Test Dataset
+dt_model <-
+  dt_wf %>%
+  fit(  gtd_data_train_preprocessed   )
+
+
+dt_predict <- dt_model %>%
+  predict(new_data = gtd_data_test_preprocessed )
+
+dt_res <- dt_predict %>%
+  bind_cols(   gtd_data_test_preprocessed   ) %>%
+  mutate(.pred_class = fct_infreq(.pred_class),
+                  wasLethal = fct_infreq(wasLethal))
+
+dt_predict <- dt_model %>%
+  predict(new_data = gtd_data_test_preprocessed,  type = "prob" )
+
+
+dt_res <- dt_predict %>%
+  bind_cols(   dt_res   )
+
+
+dt_res
+
+
+save_model(dt_model , "dt_model")
+save_model(dt_predict , "dt_predict")
+save_model(dt_res , "dt_res")
+
+
+```
+
+
+
+#### Load Models
+```{r}
+
+dt_model <- load_model("dt_model")
+dt_predict <- load_model("dt_predict")
+dt_res <- load_model("dt_res")
+```
+
+
+
+
+### Review Collected Fit Metrics 
+
+Reviewing model metrics on the test set we see that the model is fitting well however these was some overfitting to the training data that may need to be looked into. Below we can review the following metrics and see how well this fits in the final model. 
+
+**Accuracy** 
+
+How well the model fits the outcome. 
+
+
+**Sensitivity & Recall**
+
+how much were correctly identified as positive to how much were actually positive.
+
+$Sensitivity = TP / FN+TP$
+
+$Recall = TP / FN+TP$
+
+
+**Specificity**
+
+The ratio between how much were correctly classified as negative to how much was actually negative.
+
+$Specificity = TN/FP+TN$
+
+
+**Precision**
+
+Proportion correctly classified as positive out of all positives
+$Precision = TP/TP+FP$
+The estimated precision value is 0.818.
+
+
+
+**F-Measure**
+The Weighted harmonic mean of precision and recall where the best score is on and the worst is 0. 
+
+
+**Kappa**
+A useful metric that compares the model to a random calssifier with -1 to +1 being the domain.
+
+The model shows a relatively high value that is demonstrates that it is performing better than a random classifier. 
+
+**Matthews Correlation Coefficient (MCC)**
+
+A measure of the quality of the binary classifier with values from −1 and +1.
+MCC: -1 indicates total disagreement
+MCC: 0 indicate no agreement
+MCC: +1 indicates total aggrement
+
+With a value of 0.633, there is a pretty good quality of the classifier. 
+
+```{r}
+
+#Calculate Accuracy of Prediction
+df <-  accuracy(dt_res, truth = wasLethal, estimate = .pred_class)
+df <-   df %>%  add_row( roc_auc(dt_res, truth = wasLethal, estimate = .pred_TRUE))
+df <-   df %>%  add_row( recall(dt_res, truth = wasLethal, estimate = .pred_class))
+df <-   df %>%  add_row( f_meas(dt_res, truth = wasLethal, estimate = .pred_class))
+df <-   df %>%  add_row( specificity(dt_res, truth = wasLethal, estimate = .pred_class))
+df <-   df %>%  add_row( precision(dt_res, truth = wasLethal, estimate = .pred_class))
+
+df
+
+plot <- df %>%
+  arrange(
+    .estimate
+  ) %>% 
+  mutate(.metric = fct_reorder(.metric, .estimate)) %>%
+  ggplot(aes( x = .metric,  y = .estimate ,  fill = .metric)) +
+  # geom_bar() +
+  geom_col() +
+  coord_flip() +
+  scale_fill_brewer(palette = "Blues") +
+  geom_text(size = 3,
+            aes(label = round(.estimate, 2), y = .estimate + 0.08),
+            vjust = 1) +
+  graph_theme +
+  theme(
+    legend.position = "none"
+  ) +
+    labs(
+      title = "Random Forest Fit Metics"
+    )
+
+p <- ggplotly(plot)
+htmltools::div( p , align="center" );
+
+dt_res %>% kap(truth = wasLethal , 
+    estimate = .pred_class)
+
+
+dt_res %>% mcc(truth = wasLethal , 
+    estimate = .pred_class)
+
+```
+
+### Plot Results 
+
+The plotted confusion metrics obviously confirms the above calculations as they are derived from it. 
+
+We can see in the double density plot the values are balanced in their separation with no need to adjust the threshold. 
+
+```{r}
+
+p <- ggplotly(dt_res %>% 
+conf_mat(truth = wasLethal,
+         estimate = .pred_class) %>% 
+  autoplot("heatmap")+
+  graph_theme +
+  theme(
+    legend.position = "none"
+  ) +
+    labs(
+      title = "Random Forest Fit: Confusion Matrix"
+    ))
+htmltools::div( p , align="center" );
+
+
+p <- ggplotly(dt_res %>%
+  roc_curve(wasLethal, .pred_TRUE) %>%
+  autoplot()+
+  graph_theme +
+  theme(
+    legend.position = "none"
+  ) +
+    labs(
+      title = "Random Forest Fit: ROC Curve"
+    ))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(dt_res %>% 
+    lift_curve( wasLethal , .pred_TRUE ) %>% 
+    autoplot()+
+  graph_theme +
+  theme(
+    legend.position = "none"
+  ) +
+    labs(
+      title = "Random Forest Fit: Lift Curve"
+    ))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(dt_res %>%  
+  ggplot() +
+  geom_density(aes(x = .pred_FALSE, fill = wasLethal), 
+               alpha = 0.5)+
+  graph_theme +
+  theme(
+    legend.position = "none"
+  ) +
+    labs(
+      title = "Random Forest Fit: Double Density Plot"
+    ))
+htmltools::div( p , align="center" );
+
+p <- ggplotly(dt_res%>% ## get predictions
+    select(.pred_FALSE , wasLethal) %>% ## Select base false and wasLethal data
+    mutate(.pred = 100 * .pred_FALSE) %>% ## Make predictions out of 100
+    select(-.pred_FALSE) %>% ## Drop previous column to keep pred and wasLethal
+    mutate(.pred = round(.pred / 5) * 5) %>%  ## round it to nearest 5
+    count(.pred, wasLethal) %>% # Count how many there were
+    pivot_wider(names_from = wasLethal, values_from = n) %>%  ## Restructure data to wide
+    mutate(prob = `FALSE` / (`FALSE` + `TRUE`)) %>% ## Get the proportion
+    mutate(prob = 100 * prob) %>% ## Make percentage
+    rename(prediction_precentage = .pred,
+           probability_percentage = prob) %>%
+    ggplot(aes(x = prediction_precentage, y = probability_percentage)) +
+    geom_point() +
+    geom_smooth() +
+    geom_abline() +
+    coord_fixed(xlim = c(0, 100) , ylim = c(0, 100))+
+  graph_theme +
+  theme(
+    legend.position = "none"
+  ) +
+    labs(
+      title = "Random Forest Fit: Prediction vs Probabilies"
+    ))
+htmltools::div( p , align="center" );
+
+```
+
+
+
+
+
+### Get Variable Importance From Model
+
+Here we can extract the variable importance which confirms a lot of what we would expect. 
+
+Number of people wounded is the best indicator same as the sucess and failure of the attack. However firearms as a predictor well above explosives shows that though explosives are used more often, it seem that weapons have a higher lethality rate (from EDA this assumption was drawn not just from the data here). 
+
+
+```{r}
+
+library(vip)
+
+p <- ggplotly( dt_model %>%
+  pull_workflow_fit() %>%
+  vip(geom = "col" ,  aesthetics = list(color = "grey50", fill = "grey50")) +
+  graph_theme +
+  theme(
+    legend.position = "none"
+  ) +
+    labs(
+      title = "Random Forest Fit: Variable Importance"
+    ))
+htmltools::div( p , align="center" );
+
+
+```
+
+
+
+
+## Classificaiton Conclusion 
+
+From this process the tidy models package was very intuitive and had much better materials and support than the MLR packages (see appendix). 
+
+The final model was a Random Forrest that predicted much better than any single variable classifier or by chance. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Clustering 
+
+
+During the EDA process, some common themes started to appear with certain groups with different ethos targeting different things. This seems obvious, however this trend could be very important to better understand emerging terrorist organizations based on their attack typologies. As such I will be performing K-means clustering, Principle Component Analysis (PCA), and Uniform Manifold Approximation and Projection (UMAP) to explore how Target type, Attack Type, Weapon Type, and if an attack was Claimed. 
+
+I have done this by summarizing statistics by group name and looked at the proportion of each category to keep the values balanced. This is then centered and scaled to ensure it can be fit by the model. 
+
+### Review the data 
+
+```{r}
+
+head(gtd.data)
+```
+
+
+### Functions to Pivoting the Data & Getting Proportions
+
+```{r}
+
+pivot_data.ncasualties <-  function(data , var_name, grouping_name) {
+
+  local_data <-
+    groups[grouping_name] %>% left_join(data, by =  grouping_name) %>%
+    mutate (casualties = nkill  + nwound) %>%
+    group_by(.dots = c(grouping_name , var_name)) %>%
+    summarise(total = sum(casualties, na.rm = T))
+  
+  pivot <-
+    local_data %>%  pivot_wider(names_from =  (!!sym(var_name))   , values_from = total)  %>%
+    mutate(across(where(is.numeric) , ~ replace_na(. , 0))) %>%
+    mutate(TOTAL = rowSums(across(where(is.numeric)))) %>%
+    mutate(across(where(is.numeric), ~ ifelse(TOTAL == 0 , 0, . / TOTAL))) %>%
+    select(-TOTAL)
+  
+  return(pivot)
+}
+
+
+## Claimed (number of claimed)
+
+pivot_data.count <-  function(data , var_name, grouping_name){
+  local_data <- groups[grouping_name] %>% left_join(data, by =  grouping_name) %>%
+  group_by(
+    gname
+  ) %>%
+  summarise(
+    claimed =  ifelse( n() == 0, 0 , sum(claimed, na.rm = T) / n())
+  )
+  return(local_data)
+}
+
+```
+
+### Collect the Required Data 
+
+Here I am only collected from the 500 most prolific groups however this can be increased or decreased as required. 
+
+```{r}
+
+## Prep Data and Fix Naming 
+data <- gtd.data.clust  %>% 
+  select(
+    gname, 
+    region_txt,
+    nkill, 
+    nwound, 
+    attacktype1_txt, 
+    targtype1_txt, 
+    weaptype1_txt,  
+    claimed
+    
+  ) %>% 
+  filter(
+    ! is.na(gname),
+     ! is.na(targtype1_txt),
+     ! is.na(attacktype1_txt),
+      ! is.na(weaptype1_txt)
+  )%>%
+  mutate (
+    gname = snakecase::to_snake_case( gname ),
+      attacktype1_txt = snakecase::to_snake_case( attacktype1_txt ),
+      targtype1_txt = snakecase::to_snake_case( targtype1_txt ),
+      weaptype1_txt = snakecase::to_snake_case( weaptype1_txt )
+  )
+
+
+## Create Variable of interest and slice data 
+groups <- data %>%
+  group_by(
+    gname
+  ) %>% 
+  summarise(
+    casualties = sum(nkill , na.rm = T) + sum(nwound , na.rm = T)
+  ) %>% 
+  arrange(
+    desc(casualties)
+  ) %>% 
+  slice(1:500) 
+
+
+## Create initial data frame with main variable 
+grouping_name <-  "gname"
+df <-  groups[grouping_name]
+
+
+## Target Type
+var_name <- "targtype1_txt"
+df <-  pivot_data.ncasualties( data ,var_name , grouping_name) %>% 
+            inner_join(df)
+
+
+## weaptype1_txt
+var_name <- "weaptype1_txt"
+df <-  pivot_data.ncasualties( data ,var_name, grouping_name ) %>% 
+            inner_join(df)
+
+
+## attacktype1_txt
+var_name <- "attacktype1_txt"
+df <-  pivot_data.ncasualties( data ,var_name , grouping_name) %>% 
+            inner_join(df)
+
+
+## claimed
+var_name <- "claimed"
+df <- pivot_data.count(data ,var_name , grouping_name)%>% 
+            inner_join(df)
+df
+
+vars.to.use <- colnames(df)[-1] #colnames 
+
+scaled_df <- scale(df[, vars.to.use]) 
+  
+```
+
+### Using Tidy Models for K-Means
+
+In this section I will fit the K-means model using the Tidy Models methodology. 
+
+I am starting with K = 3 however this will be reviewed and adapted throughout the process. 
+
+```{r}
+scaled_df <- scaled_df[ , which(apply(scaled_df, 2, var  ) != 0) ]
+
+points <-   scaled_df
+
+kclust <- kmeans(points, iter.max = 1000, centers = 3 )
+summary(kclust)
+```
+```{r}
+augment(kclust, points)
+tidy(kclust)
+glance(kclust)
+```
+
+### Fit Mutlipe Values for K
+
+```{r}
+kclusts <- 
+  tibble(k = 1:8) %>%
+  mutate(
+    kclust = map(k, ~kmeans(points, .x)),
+    tidied = map(kclust, tidy),
+    glanced = map(kclust, glance),
+    augmented = map(kclust, augment, points)
+  )
+```
+
+## Retrieve the Values 
+
+
+```{r}
+clusters <- 
+  kclusts %>%
+  unnest(cols = c(tidied))
+
+assignments <- 
+  kclusts %>% 
+  unnest(cols = c(augmented))
+
+clusterings <- 
+  kclusts %>%
+  unnest(cols = c(glanced))
+```
+
+## Plot the Values for K against Key Variables 
+
+```{r , fig.height=10 , out.height = 10}
+
+p1 <-
+  ggplot(assignments, aes(x = explosives, y = claimed)) +
+  geom_point(aes(color = .cluster), alpha = 0.8) +
+  facet_wrap( ~ k , ncol = 2) +
+  geom_point(data = clusters, size = 3, shape = "x") +
+  theme(plot.title = element_text(
+    size = 14,
+    hjust = 0.5 ,
+    margin = margin(5, 5, 0, 5)
+  ),) +
+  labs(title = "Cluster and Means for K Values")
+
+p <- ggplotly(p1)
+htmltools::div( p , align="center" );
+
+p1 <-
+  ggplot(assignments, aes(x = explosives, y = armed_assault)) +
+  geom_point(aes(color = .cluster), alpha = 0.8) +
+  facet_wrap( ~ k, ncol = 2) +
+  geom_point(data = clusters, size = 3, shape = "x") +
+  theme(plot.title = element_text(
+    size = 14,
+    hjust = 0.5 ,
+    margin = margin(5, 5, 0, 5)
+  ),) +
+  labs(title = "Cluster and Means for K Values")
+p <- ggplotly(p1)
+htmltools::div( p , align="center" );
+
+p1 <-
+  ggplot(assignments, aes(x = private_citizens_property, y = claimed)) +
+  geom_point(aes(color = .cluster), alpha = 0.8) +
+  facet_wrap( ~ k, ncol = 2) +
+  geom_point(data = clusters, size = 3, shape = "x") +
+  theme(plot.title = element_text(
+    size = 14,
+    hjust = 0.5 ,
+    margin = margin(5, 5, 0, 5)
+  ),) +
+  labs(title = "Clusters and Means for K Values")
+
+p <- ggplotly(p1)
+htmltools::div( p , align="center" );
+```
+
+## Review the Total With Sum of Squares 
+
+From the plots above and the TWSS plot below we can see that a good value for K is 2. Another option might be 5 however from research and EDA we can see that there really are 4 dominate groups that are formed between terrorist organizations: Those that oppose government, and religious extremism. 
+
+```{r}
+p <- ggplotly(ggplot(clusterings, aes(k, tot.withinss)) +
+  geom_line() +
+  geom_point() +
+  geom_text(mapping = aes(label=k) , nudge_x = 0.1 , nudge_y = 300) +
+  graph_theme +
+  theme(
+    legend.position = "none"
+  ) +
+    labs(
+      title = "Total Within Sum of Squares"
+    ))
+htmltools::div( p , align="center" );
+```
+
+
+
+
+## Uniform Manifold Approximation and Projection 
+
+Uniform Manifold Approximation and Projection for Dimension Reduction is fit quite simply using tidy models, with the ability to hover over the data points using plotly. This allows for a good way to explore the data. This has done well at segmenting some of the groups that are unique which can allow for further research into why they are so different. 
+
+```{r}
+library(embed)
+
+
+umap_rec <- recipe(~., data = df) %>%
+  update_role(gname, new_role = "id") %>%
+  step_normalize(all_predictors()) %>%
+  step_zv(all_predictors()) %>% 
+  step_umap(all_predictors()) %>% 
+  step_naomit(all_predictors())  
+
+umap_prep <- prep(umap_rec)
+
+
+plot <- bake(umap_prep, new_data = NULL) %>%
+  ggplot(aes(umap_1, umap_2, label = gname)) +
+  geom_point(color = "midnightblue", alpha = 0.7, size = 2) +
+  # geom_text(check_overlap = TRUE, hjust = "inward", family = "IBMPlexSans") +
+  labs(color = NULL)+
+  graph_theme +
+  theme(
+    legend.position = "none"
+  ) +
+    labs(
+      title = "Groups: UMAP Plot"
+    )
+
+
+htmltools::div(ggplotly(plot) , align="center" );
+
+```
+
+### Principle Component Analysis 
+
+Here we can again quickly use the Tidy Models way of fitting data with PCA to identify groups. Though the outcome does not show too much variation on the primary axis that forms groups there is an interesting pattern and collection of values that allows for the exploration of the different groups. 
+
+```{r}
+
+
+pca_rec <- recipe(~., data = df) %>%
+  update_role(gname, new_role = "id") %>%
+  step_normalize(all_predictors()) %>%
+  step_zv(all_predictors()) %>% 
+  step_pca(all_predictors()) %>% 
+  step_naomit(all_predictors())  
+
+pca_prep <- prep(pca_rec)
+
+plot <- bake(pca_prep, new_data = NULL) %>%
+  ggplot(aes(PC1, PC2, label = gname)) +
+  geom_point(color = "midnightblue", alpha = 0.7, size = 2) +
+  # geom_text(check_overlap = TRUE, hjust = "inward", family = "IBMPlexSans") +
+  labs(color = NULL)+
+  graph_theme +
+  theme(
+    legend.position = "none"
+  ) +
+    labs(
+      title = "Groups: PCA Plot"
+    )
+
+
+htmltools::div(ggplotly(plot) , align="center" );
+```
+
+
+
+## Practical R for Data Science & Lecture Slides Process 
+
+Whilst working in the Tidy Models universe has been interesting and useful, I have also looked to implement the process that are explored in the lectures and labs. This section is fitting similar processes as before however using different packages and functions with further exploration of the hierarchical clustering with a dendrogram and distance matrix. 
+
+## Set K Value 
+
+From the previuos exploration I am going to start with a K value of 2. 
+
+```{r}
+clust_k <-  2
+```
+
+### Calculate Distance Matrix & Plot Dendrogram
+
+This is quite a significant plot as there are many different groups being paired. Whilst it is hard to read, you can clearly see the imbalances of the clustering. 
+
+```{r , fig.height=16, , out.height = 16}
+library(ggdendro)
+d <- dist(scaled_df, method="euclidean")
+
+pfit <- hclust(d, method="ward.D2") # perform hierarchical clustering
+# To examine `pfit`, type: summary(pfit) and pfit$height
+
+
+# model <- hclust(dist(d), "ave")
+dhc <- as.dendrogram(pfit)
+
+dend <- as.dendrogram(pfit)
+dend_data <- dendro_data(dend, type = "rectangle")
+
+
+# Plot line segments and add labels
+p <- ggplot(dend_data$segments) + 
+  geom_segment(aes(x = x, y = y, xend = xend, yend = yend))+
+  geom_text(data = dend_data$labels , aes(x, y, label = label),
+            hjust = 1, angle = 0, nudge_y=2, size = 3)+
+  ylim(-3, 15) +
+  coord_flip() + 
+   scale_y_reverse(expand = c(0.2, 0)) + 
+  theme_minimal() +
+  theme(axis.text.y=element_blank() ,
+        axis.title.y = element_blank())
+print(p)
+
+```
+
+
+### Cut Tree & Group 
+```{r}
+groups <- cutree(pfit, k = clust_k)
+
+print_clusters <- function(df, groups, cols_to_print) {
+  Ngroups <- max(groups)
+  for (i in 1:Ngroups) {
+    print(paste("cluster", i))
+    print(df[groups == i, cols_to_print])
+  }
+}
+
+```
+
+
+
+### Filter values & Calculate Principle Components 
+
+```{r}
+
+
+scaled_df <- scaled_df[ , which(apply(scaled_df, 2, var  ) != 0) ]
+
+princ <- prcomp(scaled_df) # Calculate the principal components of scaled_df
+nComp <- 2 # focus on the first two principal components
+# project scaled_df onto the first 2 principal components to form a new
+# 2-column data frame.
+project2D <- as.data.frame(predict(princ, newdata=scaled_df)[,1:nComp])
+# combine with `groups` and df$Country to form a 4-column data frame
+hclust.project2D <- cbind(project2D, cluster=as.factor(groups), country=df$gname)
+head(hclust.project2D)
+```
+### Set up Convex Hull Function for Plotting
+
+```{r}
+# finding convex hull
+library('grDevices')
+find_convex_hull <- function(proj2Ddf, groups) {
+  do.call(rbind,
+          lapply(
+            unique(groups),
+            FUN = function(c) {
+              f <- subset(proj2Ddf, cluster == c)
+              
+              f[chull(f),]
+            }
+          ))
+}
+
+```
+
+## plot the Convex Hull
+
+We can see here that there are not many small unified groups and the two groups do overlap significantly. Based on the data this is expected. 
+
+```{r}
+
+hclust.hull <- find_convex_hull(hclust.project2D, groups)
+
+
+library(ggplot2)
+p <- ggplotly(
+  ggplot(hclust.project2D, aes(x = PC1, y = PC2)) +
+    geom_point(aes(shape = cluster, color = cluster)) +
+    # geom_text(aes(label=country, check_overlap =TRUE , color=cluster), hjust=0, vjust=1, size=3) +
+    geom_polygon(
+      data = hclust.hull,
+      aes(group = cluster, fill = as.factor(cluster)),
+      alpha = 0.4,
+      linetype = 0
+    ) + 
+    graph_theme +
+    labs(title = "PCA Convex Hull Plot")
+)
+htmltools::div( p , align="center" );
+```
+
+
+
+
+### Test the Robustness of K
+
+```{r}
+library(fpc)
+
+kbest.p <- clust_k
+
+cboot.hclust <- clusterboot(scaled_df,
+                            clustermethod = hclustCBI,
+                            method = "ward.D2",
+                            k = kbest.p)
+
+```
+
+
+```{r}
+summary(cboot.hclust$result)
+
+```
+### Review Cluster Group Names 
+
+We can see that cluster one has 349 groups where as cluster 2 has 119. This imbalance can be seen in the graphs above and is most likely due to the high values around explosives attacks used by some of the key groups in cluster one with explosives being the most common attack type. 
+
+```{r}
+groups.cboot <- cboot.hclust$result$partition
+print_clusters(df, groups.cboot, "gname")
+
+```
+### Robustness of Clusters 
+
+Cluster one is very robust where as cluster 2 is not as much. 
+
+```{r}
+1 - cboot.hclust$bootbrd/100
+
+```
+
+```{r}
+# Function to return the squared Euclidean distance of two given points x and y
+sqr_euDist <- function(x, y) {
+  sum((x - y) ^ 2)
+}
+# Function to calculate WSS of a cluster, represented as a n-by-d matrix
+# (where n and d are the numbers of rows and columns of the matrix)
+# which contains only points of the cluster.
+wss <- function(clustermat) {
+  c0 <- colMeans(clustermat)
+  sum(apply(
+    clustermat,
+    1,
+    FUN = function(row) {
+      sqr_euDist(row, c0)
+    }
+  ))
+}
+# Function to calculate the total WSS. Argument `scaled_df`: data frame
+# with normalised numerical columns. Argument `labels`: vector containing
+# the cluster ID (starting at 1) for each row of the data frame.
+wss_total <- function(scaled_df, labels) {
+  wss.sum <- 0
+  k <- length(unique(labels))
+  for (i in 1:k)
+    wss.sum <- wss.sum + wss(subset(scaled_df, labels == i))
+  wss.sum
+}
+
+```
+
+
+
+
+
+```{r}
+# Function to calculate total sum of squared (TSS) distance of data
+# points about the (global) mean. This is the same as WSS when the
+# number of clusters (k) is 1.
+tss <- function(scaled_df) {
+  wss(scaled_df)
+}
+# Function to return the CH indices computed using hierarchical
+# clustering (function `hclust`) or k-means clustering (`kmeans`)
+# for a vector of k values ranging from 1 to kmax.
+CH_index <- function(scaled_df, kmax, method = "kmeans") {
+  if (!(method %in% c("kmeans", "hclust")))
+    stop("method must be one of c('kmeans', 'hclust')")
+  npts <- nrow(scaled_df)
+  wss.value <- numeric(kmax) # create a vector of numeric type
+  # wss.value[1] stores the WSS value for k=1 (when all the
+  # data points form 1 large cluster).
+  wss.value[1] <- wss(scaled_df)
+  if (method == "kmeans") {
+    # kmeans
+    for (k in 2:kmax) {
+      clustering <- kmeans(scaled_df, k, nstart = 10, iter.max = 100)
+      wss.value[k] <- clustering$tot.withinss
+    }
+  } else {
+    # hclust
+    d <- dist(scaled_df, method = "euclidean")
+    pfit <- hclust(d, method = "ward.D2")
+    for (k in 2:kmax) {
+      labels <- cutree(pfit, k = k)
+      wss.value[k] <- wss_total(scaled_df, labels)
+    }
+  }
+  bss.value <- tss(scaled_df) - wss.value # this is a vector
+  B <- bss.value / (0:(kmax - 1)) # also a vector
+  W <- wss.value / (npts - 1:kmax) # also a vector
+  data.frame(k = 1:kmax,
+             CH_index = B / W,
+             WSS = wss.value)
+}
+```
+
+
+### Plot Variance ratio criterion & Sum Distances 
+
+Here there is now distinct elbow until much later own. From the plots I would still take the K of 2 to be the best value but will explore different values and different input variables. 
+
+```{r}
+library(gridExtra)
+# calculate the CH criterion
+crit.df <- CH_index(scaled_df, 10, method = "hclust")
+fig1 <- ggplot(crit.df, aes(x = k, y = CH_index)) +
+  geom_point() + geom_line(colour = "red") +
+  scale_x_continuous(breaks = 1:10, labels = 1:10) +
+  labs(y = "CH index") + theme(text = element_text(size = 20))
+fig2 <- ggplot(crit.df, aes(x = k, y = WSS), color = "blue") +
+  geom_point() + geom_line(colour = "blue") +
+  scale_x_continuous(breaks = 1:10, labels = 1:10) +
+  theme(text = element_text(size = 20))
+
+grid.arrange(fig1, fig2, nrow=1)
+```
+
+## Resample the K-Means 
+
+This process is run 100 times with 100 random starts that optimizes the cluster centers 
+
+```{r}
+kbest.p <- clust_k
+# run kmeans , 100 random starts, and 100
+# maximum iterations per run.
+kmClusters <- kmeans(scaled_df, kbest.p, nstart=100, iter.max=100)
+```
+
+```{r}
+kmClusters$centers
+
+kmClusters$size
+
+cat("Total of cluster sizes =", sum(kmClusters$size))
+
+cat("Total number of observations =", nrow(df))
+
+```
+
+
+### Results 
+
+Here we can see that the groups are now significantly better balanced 
+
+```{r}
+groups <- kmClusters$cluster
+print_clusters(df, groups, "gname")
+
+```
+### Compare H clust vs K means 
+
+
+```{r}
+library(fpc)
+kmClustering.ch <- kmeansruns(scaled_df, krange=1:10, criterion="ch")
+kmClustering.ch$bestk
+
+kmClustering.asw <- kmeansruns(scaled_df, krange=1:10, criterion="asw")
+kmClustering.asw$bestk
+
+# Compare the CH values for kmeans() and hclust().
+print("CH index from kmeans for k=1 to 10:")
+
+print(kmClustering.ch$crit)
+
+print("CH index from hclust for k=1 to 10:")
+## [1] "CH index from hclust for k=1 to 10:"
+hclusting <- CH_index(scaled_df, 10, method="hclust")
+print(hclusting$CH_index)
+
+```
+
+
+```{r}
+library(gridExtra)
+kmCritframe <- data.frame(k = 1:10,
+                          ch = kmClustering.ch$crit,
+                          asw = kmClustering.asw$crit)
+fig1 <- ggplot(kmCritframe, aes(x = k, y = ch)) +
+  geom_point() + geom_line(colour = "red") +
+  scale_x_continuous(breaks = 1:10, labels = 1:10) +
+  labs(y = "CH index") + theme(text = element_text(size = 20)) +
+  graph_theme
+
+fig2 <- ggplot(kmCritframe, aes(x = k, y = asw)) +
+  geom_point() + geom_line(colour = "blue") +
+  scale_x_continuous(breaks = 1:10, labels = 1:10) +
+  labs(y = "ASW") + theme(text = element_text(size = 20)) +
+  graph_theme
+
+grid.arrange(fig1, fig2, nrow=1 , top = "CH Index & ASW for Vlaues of K")
+
+```
+## Itterate through Kmeans Cluster & Plot PCA
+
+This process runs the iterative method of clustering that allows for more robust cluster centers. The results are then exported to variables and plotted as convex hulls. 
+
+As you can see in the plots below there are quite robust groups forming demonstrating the importance of running clustering in an itterative manner. 
+
+
+
+```{r}
+fig <- c()
+kvalues <- seq(2, 5)
+for (k in kvalues) {
+  groups <- kmeans(scaled_df, k, nstart = 100, iter.max = 100)$cluster
+  kmclust.project2D <- cbind(project2D,
+                             cluster = as.factor(groups),
+                             country = df$gname)
+  kmclust.hull <- find_convex_hull(kmclust.project2D, groups)
+  assign(
+    paste0("fig", k),
+    ggplot(kmclust.project2D, aes(x = PC1, y = PC2)) +
+      geom_point(aes(shape = cluster, color = cluster)) +
+      geom_polygon(
+        data = kmclust.hull,
+        aes(group = cluster, fill = cluster),
+        alpha = 0.4,
+        linetype = 0
+      ) +
+      graph_theme +
+      labs(title = sprintf("k = %d", k)) +
+      theme(legend.position = "none")
+  )
+}
+
+library(gridExtra)
+grid.arrange(fig2, fig3, fig4, fig5, nrow = 2 ,  top  = 'PCA for K Values')
+
+```
+
+
+
+# Appendix 
+
+To save my poor computer from overloading its memory, I have set the $eval=FALSE$. 
+I have kept the documentation here as I found the MLR package rather intuitive and I will be exploring it again once the documentation is a bit more robust. 
+
+Feel free to download the code and run it yourself if you wish to test out the package for yourself. 
+
+## MLR3 Modelling
+
+```{r , eval=FALSE}
+
+
+library(mlr3verse)
+
+data <- gtd.data.train %>%
+  select(
+    gtd.explanatory.reduced
+  ) %>%
+  mutate(
+    wasLethal = as.factor(wasLethal)
+  )
+
+## Set Seed
+set.seed(123)
+
+## Create task
+ task = as_task_classif(data, target = "wasLethal")
+
+## Create Learner
+ learner <- lrn("classif.log_reg",  predict_type = "prob")
+
+## Create Training and Testing sets
+train_set = sample(task$nrow, size= 0.95 * task$nrow)
+test_set = setdiff(seq_len(task$nrow), train_set)
+
+
+```
+
+
+```{r , eval=FALSE}
+task$feature_names
+
+# show summary of entire data
+summary(as.data.table(task))
+
+as.data.table(task)
+```
+
+
+```{r , eval=FALSE}
+
+
+# default plot: class frequencies
+autoplot(task)
+
+# autoplot(task, type = "pairs")
+```
+
+
+
+### Train Learner
+
+```{r , eval=FALSE}
+## Set Predict Type
+learner$predict_type = "prob"
+
+## Train the Model on Training Set
+learner$train(task, row_ids = train_set)
+
+
+```
+
+
+
+### Print the model
+```{r , eval=FALSE}
+ learner$model
+```
+
+
+
+### Predict
+```{r , eval=FALSE}
+
+## Build Prediction object
+prediction = learner$predict(task, row_ids = test_set)
+
+
+
+
+## data.table conversion
+head(as.data.table(prediction)) # show first six
+
+
+## directly access the matrix of probabilities:
+head(prediction$prob)
+```
+
+
+
+
+### Print Confusion Matrix
+```{r , eval=FALSE}
+
+prediction$confusion
+
+```
+
+### Plot Confusion Matrix
+```{r , eval=FALSE}
+
+library(mlr3viz)
+
+## Plot the Response
+autoplot(prediction)
+
+
+resampling = rsmp("cv")
+object = resample(task, learner, resampling)
+
+```
+
+```{r , eval=FALSE}
+
+# install.packages('Rcpp')
+library(Rcpp)
+
+# # ROC curve, averaged over resampling folds  // FAILING TO PLOT ROC - Cannot use this
+# mlr3viz::autoplot(object, type = "roc")
+```
+
+### Model Output Table
+
+```{r , eval=FALSE}
+
+modeloutput <- tribble(
+  ~ name,
+  ~ classif.auc,
+  ~ classif.acc,
+  ~ classif.specificity,
+  ~ classif.precision,  
+  ~ classif.recall,
+  ~ classif.sensitivity
+)
+
+```
+
+
+
+
+### Get Output Measures
+```{r , eval=FALSE}
+
+
+measure = msrs( c(
+  "classif.auc",
+  "classif.acc",
+  "classif.specificity",
+  "classif.precision",
+  "classif.recall",
+  "classif.sensitivity"
+))
+
+var <- prediction$score(measure)
+
+df <- as.data.frame(var)
+
+
+modeloutput <- modeloutput %>%
+  add_row(
+    name = "NAME_1",
+    classif.auc = df[1, 1],
+    classif.acc = df[2, 1] ,
+    classif.specificity = df[3, 1] ,
+    classif.precision = df[3, 1] ,
+    classif.recall = df[3, 1] ,
+    classif.sensitivity = df[3, 1] ,
+  )
+
+modeloutput
+
+```
+
+
+```{r , eval=FALSE}
+
+rr = resample(task, learner, rsmp("cv"), store_models = TRUE )
+
+```
+
+```{r , eval=FALSE}
+
+# boxplot of AUC values across the 10 folds
+autoplot(rr, measure = msr("classif.auc"))
+
+# ROC curve, averaged over 10 folds
+autoplot(rr, type = "roc")
+
+# learner predictions for the first fold
+rr$filter(1)
+autoplot(rr, type = "prediction")
+
+```
+
+
+### Plot ROC
+```{r , eval=FALSE}
+
+autoplot(pred, type = "roc")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Train learner on Training Set
+```{r , eval=FALSE}
+
+learner$train(task, row_ids = train_set)
+
+```
+
+
+
+### Create Predicitons
+```{r , eval=FALSE}
+
+pred = learner$train(task)$predict(task)
+
+
+```
+
+
+
+
+### Get performance measure
+```{r , eval=FALSE}
+
+measures = msrs(c("classif.tpr", "classif.tnr")) # use msrs() to get a list of multiple measures
+pred$confusion
+
+cat("\n")
+pred$score(measures)
+
+# cat("\nSet New Threshold")
+# pred$set_threshold(0.2)
+# pred$confusion
+
+
+
+```
+
+
+
+
+
+### Plot and Explore Task
+```{r , eval=FALSE}
+
+# library("mlr3viz")
+
+
+autoplot(task, type = "pairs")
+
+
+```
+
+
+
+
+
+```{r , eval=FALSE}
+
+# logRegWrapper <- makeImputeWrapper("classif.logreg",
+#                                    cols = list(propvalue = imputeMedian(), nwound = imputeMean() ))
+
+```
+
+```{r , eval=FALSE}
+
+kFold <- makeResampleDesc(method = "RepCV", folds = 3, reps = 10,
+                          stratify = TRUE)
+
+logRegwithImpute <- resample(leaner, task,
+                             resampling = kFold,
+                             measures = list(acc, mmce , fpr, fnr ))
+```
+
+```{r , eval=FALSE}
+
+logRegwithImpute
+cat("\n")
+pred1
+
+```
+
+
+
+## MLR (deprecated)
+
+## Split data and Model
+
+```{r , eval=FALSE}
+
+n = getTaskSize(task)
+train.set = sample(n, size = round(2/3 * n))
+test.set = setdiff(seq_len(n), train.set)
+
+
+```
+
+#### Model Selection
+
+```{r , eval=FALSE}
+## List all algorithms
+#listLearners()$class
+
+##List by Function
+cat("\n\nClassificaiton \n")
+listLearners("classif")$class
+
+cat("\n\nRegression \n")
+listLearners("regr")$class
+
+cat("\n\nClustering \n")
+listLearners("cluster")$class
+```
+
+
+#### Model 1: Logistic Regression
+
+```{r , eval=FALSE}
+lrn1 = makeLearner("classif.logreg", predict.type = "prob")
+mod1 = train(lrn1, task, subset = train.set)
+pred1 = predict(mod1, task = task, subset = test.set)
+
+```
+
+
+
+```{r , eval=FALSE}
+
+# logRegwithImpute
+
+df = generateThreshVsPerfData(pred1, measures = list(fpr, tpr, mmce))
+
+```
+
+```{r , eval=FALSE}
+
+plotROCCurves(df)
+#
+# mlr::performance(pred1, mlr::auc)
+
+plotThreshVsPerf(df)
+```
+
+
+
+#### Model 2: Random Forrest
+
+```{r , eval=FALSE}
+
+lrn2 = makeLearner("classif.randomForest", predict.type = "prob")
+mod2 = train(lrn2, task, subset = train.set)
+pred2 = predict(mod2, task = task, subset = test.set)
+```
+
+
+
+#### Model 3: Naive Bayes
+
+```{r , eval=FALSE}
+
+lrn3 = makeLearner("classif.naiveBayes", predict.type = "prob")
+mod3 = train(lrn3, task, subset = train.set)
+pred3 = predict(mod3, task = task, subset = test.set)
+
+```
+
+
+#### Model 4: XGBoost
+
+```{r , eval=FALSE}
+
+library(mltools)
+
+head(data)
+
+dt <- data %>%
+  select(-wasLethal)
+
+dt2 <- data %>%
+  select(wasLethal)
+
+```
+
+
+```{r , eval=FALSE}
+
+library(data.table)
+library(mltools)
+
+## One Hot Encoding
+dt <- one_hot(as.data.table(dt))
+
+dt <- cbind(dt2, dt)
+
+
+colnames(dt) <- make.names(colnames(dt), unique = T)
+
+task4 <- makeClassifTask(data = dt, target = "wasLethal")
+
+lrn4 = makeLearner("classif.xgboost", predict.type = "prob")
+mod4 = train(lrn4, task4, subset = train.set)
+pred4 = predict(mod4, task = task4, subset = test.set)
+
+
+```
+
+#### Model 5: R Part
+
+```{r , eval=FALSE}
+
+lrn5 = makeLearner("classif.rpart", predict.type = "prob")
+mod5 = train(lrn5, task, subset = train.set)
+pred5 = predict(mod5, task = task, subset = test.set)
+
+lrn5
+
+```
+
+
+#### Model 6: Support Vector Machine
+
+```{r , eval=FALSE}
+
+lrn6 = makeLearner("classif.svm", predict.type = "prob")
+mod6 = train(lrn6, task, subset = train.set)
+pred6 = predict(mod6, task = task, subset = test.set)
+
+lrn6
+
+```
+
+### Check Model Quality
+
+#### AUC
+
+```{r , eval=FALSE}
+
+models <-  list(
+    logReg = pred1,
+    randforest = pred2,
+    naiveBayes = pred3,
+    xgBoost = pred4,
+    rpart = pred5,
+    svm = pred6
+    )
+
+
+mlr::performance(pred1, mlr::auc)
+mlr::performance(pred2, mlr::auc)
+mlr::performance(pred3, mlr::auc)
+mlr::performance(pred4, mlr::auc)
+mlr::performance(pred5, mlr::auc)
+mlr::performance(pred6, mlr::auc)
+
+
+
+```
+
+
+### Performance Metrics
+
+
+Precision/recall
+sensitivity / specificity
+
+```{r , eval=FALSE}
+
+library(gridExtra)
+
+df = generateThreshVsPerfData(models, measures = list(ppv, tpr, tnr))
+
+# Precision/recall graph
+plt1 <- plotROCCurves(df, measures = list(tpr, ppv), diagonal = FALSE)
+
+# Sensitivity/specificity plot
+plt2 <- plotROCCurves(df, measures = list(tnr, tpr), diagonal = FALSE)
+
+
+grid.arrange(plt1, plt2, ncol=2)
+```
+
+
+
+#### ROC AUC Plot - All Models
+
+```{r , eval=FALSE}
+
+df = generateThreshVsPerfData(
+ models,
+  measures = list(fpr, tpr))
+plotROCCurves(df)
+```
+
+
+#### Confidence Matrix
+
+```{r , eval=FALSE}
+
+calculateConfusionMatrix(logRegwithImpute$pred , relative = T)
+
+```
+
+

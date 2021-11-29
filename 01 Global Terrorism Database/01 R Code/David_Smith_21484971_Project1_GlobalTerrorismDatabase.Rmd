@@ -1,0 +1,3781 @@
+---
+title: 'CITS 4009 Project 1:\n Global Terrorism Database (GTD)'
+author: "David Smith (21484971)"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+    toc: yes
+    toc_depth: 3
+    number_sections: yes
+    toc_float: true
+    toc_collapsed: false
+    smooth_scroll: false
+    code_folding: hide
+    theme: simplex
+    df_print: kable
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+ echo = TRUE,
+ out.width = "80%",
+ fig.align="center",
+  message = FALSE, 
+ warning = FALSE
+)
+```
+
+<br/>
+
+***Please Note: This report discusses acts of terrorism.***
+
+This trigger warning for anyone who may be personally affected by this topic - specific details of attacks are not explicitly discussed however summaries of events are provided as well as other statistics
+
+
+<br/>
+
+# Introduction
+
+Acts of terrorism have a way of grabbing headlines. By their nature, these horrific acts of violence are used to instill fear and are enacted for a myriad of reasons and yet are seldom understood. Many aspects of society have fundamentally changed due to acts of terrorism. Air travel, urban design, financial systems, and diplomatic strategy have all had to adapt to the modern counter terrorism landscape. 
+
+The importance of this topic to modern society cannot be understated. Hundreds of thousands of people have been killed in the name of countless causes globally. With the number of attacks significantly increasing due to various enabling factors, research, or at least publicly available research, seems to be lagging behind as information is difficult to define, attain, and collate. The lack of quantitative information available has meant that the majority of research on terrorism is primarily qualitative conjecture. 
+
+A 2011 study performed in the United States by the National Consortium for the Study of Terrorism And Response to Terrorism (START) found that of 300 hypotheses formulated around terrorism in academia only 8 possessed both significant qualitative and quantitative supporting evidence.^[Influencing Violent Extremist Organizations: Planning Influence Activities While Accounting for Unintended Side Effects (I-VEO), National Consortium for the Study of Terrorism and Responses to Terrorism (START), University of Maryland. (2011).  Retrieved from http://start.foxtrotdev.com/] With conflicting sources, definitions, and unreliable data this is unsurprising however, there is considerable valuable to be gained through the exploration of data and ideas relating to terrorism.
+
+The primary goal of the data exploration is to gain insights from historic terrorism data to better understand:
+
+1) How is terrorism evolving over time?  
+2) Who are the primary groups, how do they operate, and where do they operate?  
+
+These high-level questions will provide the framework for further analysis questions that explore more specific aspects throughout the data exploration process. 
+
+
+# The Global Terrorism Database 
+
+The data chosen for this exploration is the Global Terrorism Database (GTD) collated and maintained by the START institute in the United States. The GTD collates information across multiple dimensions from unclassified media articles which form 100 structured variables that categorize key information pertaining to the attack and various unstructured variables that contain summaries and other general information that allows for contextualization. 
+
+> The Global Terrorism Database (GTD) documents more than 200,000 international and domestic terrorist attacks that occurred worldwide since 1970. With details on various dimensions of each attack, the GTD familiarizes analysts, policymakers, scholars, and journalists with patterns of terrorism.^[National Consortium for the Study of Terrorism and Responses to Terrorism (START), University of Maryland. (2019). The Global Terrorism Database (GTD) Retrieved from "https://www.start.umd.edu/gtd"]
+> `r tufte::quote_footer('Global Terrorism Database Code Book')`   
+
+
+## Definition Of An Act Of Terrorism 
+
+Defining what constitutes as an act of terrorism is a considerably difficult task to define and something that has yet to reach consensus in research. The definition that the START uses is a good all-round definition that has been implemented in order to capture more specifically what would traditionally be attributed to an act of terrorism as opposed to an act of violence. 
+
+> The GTD defines a terrorist attack as the threatened or actual use of illegal force and violence by a non-state actor to attain a political, economic, religious, or social goal through fear, coercion, or intimidation.^[National Consortium for the Study of Terrorism and Responses to Terrorism (START), University of Maryland. (2019). The Global Terrorism Database (GTD) Retrieved from "https://www.start.umd.edu/gtd"]
+> `r tufte::quote_footer('Global Terrorism Database Code Book')`
+
+The definition is further extended in the filtering of information using a specific criteria to ensure a reduction in ambiguity   across those inputting information.
+
+## Methodology of the GTD
+
+>GTD Definition of Terrorism and Inclusion Criteria 
+The GTD defines a terrorist attack as the threatened or actual use of illegal force and violence by a non-state actor to attain a political, economic, religious, or social goal through fear, coercion, or intimidation. In practice this means in order to consider an incident for inclusion in the GTD, all three of the following attributes must be present: 
+>
+>   - The incident must be intentional – the result of a conscious calculation on the part of a perpetrator. 
+>   - The incident must entail some level of violence or immediate threat of violence -including property violence, as well as violence against people. 
+>  
+>   - The perpetrators of the incidents must be sub-national actors. The database does not include acts of state terrorism. 
+In addition, at least two of the following three criteria must be present for an incident to be included in the GTD: 
+>   - Criterion 1: The act must be aimed at attaining a political, economic, religious, or social goal. In terms of economic goals, the exclusive pursuit of profit does not satisfy this criterion. It must involve the pursuit of more profound, systemic economic change. 
+>  
+>    - Criterion 2: There must be evidence of an intention to coerce, intimidate, or convey some other message to a larger audience (or audiences) than the immediate victims. It is the act taken as a totality that is considered, irrespective if every individual involved in carrying out the act was aware of this intention. As long as any of the planners or decision-makers behind the attack intended to coerce, intimidate or publicize, the intentionality criterion is met.   
+>  
+>   - Criterion 3: The action must be outside the context of legitimate warfare activities. That is, the act must be outside the parameters permitted by international humanitarian law, insofar as it targets non-combatants   
+>  
+>Each of these latter three criteria filters can be applied to the database on the GTD website and the full data file.^[National Consortium for the Study of Terrorism and Responses to Terrorism (START), University of Maryland. (2019). The Global Terrorism Database (GTD) Retrieved from "https://www.start.umd.edu/gtd"]
+> `r tufte::quote_footer('Global Terrorism Database Code Book')`  
+
+As a note, given recent events in Afghanistan by the Taliban some of these criteria need to be considered further. For example, now that the Taliban are controlling the country and are the dominate political entity does this mean that they can no longer be classes as non-state actors? However this is an exploration for another project, for now we will be using the data as is.
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Known Data Issues & Biases   
+
+**Data Reliability Issues**  
+
+Collecting quality data is difficult in even the most controlled situations where acts of terrorism are not easily understood and are difficult to analyse as such many errors can occur and the GTD reflects this.   
+
+Many attacks occur with unknown information or conflicting information. Whilst the START organisation does its best to collect quality information this task relies heavily on the third parties. The quality of data can be affected in many ways and it is important to consider these when analysing a dataset.  
+
+
+**1993 missing data**   
+The data collected from 1993 is not included in this data analysis due it being lost with recovery efforts only able to recover 15% of the data. The 1993 has not being incorporated into this data set as it can lead to skewing of results and visualizations.
+
+>Users familiar with the GTD’s data collection methodology are aware that incidents of terrorism from 1993 are not present in the GTD because they were lost prior to START’s compilation of the GTD from multiple data collection efforts. Several efforts were made to re-collect these incidents from original news sources. Unfortunately, due to the challenges of retrospective data collection for events that happened more than 25 years ago, the number of 1993 cases for which sources were identified is only 15% of estimated attacks. As a consequence we exclude all 1993 attacks from the GTD data to prevent users from misinterpreting the low frequency in 1993 as an actual count. However, Appendix II provides country level statistics for 1993. These figures were obtained from an early report on the data compiled before the 1993 files were lost. In addition, the 1993 data we do have is available to download from the GTD website.^[National Consortium for the Study of Terrorism and Responses to Terrorism (START), University of Maryland. (2019). The Global Terrorism Database (GTD) Retrieved from "https://www.start.umd.edu/gtd"]
+> `r tufte::quote_footer('Global Terrorism Database Code Book')` 
+
+
+**Changing Processes & Materials**
+
+The GTD has employed a single definition over the course of its data connection efforts however, there have been other changes made to the collection of materials and workflows employed to gather information. Intrinsic to the process of data collect and filtration of data this will lead to some leave of variation over time.  
+
+Whilst reviewing that collection methodology there has been significant changes in processes in 1998, 2008, and 2012. As such it is important to understand that this process coupled with other enablers such as the pervasiveness of the internet and media focus that could explain some of the increase in the number of recorded attacks.  
+
+**Legacy Issues**  
+
+The GTD is an evolving database and collection effort that goes through some changes over time. As such new data fields are added to allow for the better understanding of events and terrorism landscape. With these new data fields an attempt is made to retroactively code historic events however, this is not always possible and therefore data might be skewed due to the biases in the encoding process. These changes are explicitly mentioned in the code book.  
+
+**Remote Locations & Missing Information or Events **  
+
+With some attacks occurring in remote and impoverished regions gathering accurate and reported information is challenging. The results of these events therefore can be inaccurate, unknown, or missed. It is important to understand that the data collected here comes from only open, non-classified channels – primarily media reporting.   
+
+**Definitions**  
+
+Difficult to determine if that attack is an act of terrorism or an act of violence. The distinction and subtleties around the definitions are often hard to discern. In most of these cases, they are included into the GTD.   
+
+**Media Bias**  
+
+Media as the primary source makes it very difficult to ensure data reliability as it has its own biases. These can include: 
+
+  -	Political agendas of media  
+
+  -	Only reporting on what sells or is deemed important to be broadcast 
+
+  -	Can be restricted by governments, military, and police 
+
+  -	May wish not to report information that might lead to some form of economic, social, governmental, or terrorist organisation backlash
+
+If the database is relying on media coverage it is it can be assumed that only those attacks big enough to have some leave of reports will be collected. This might cause a skew of the data towards larger, more impactful events. 
+
+
+**Conflicting Information **
+
+Terrorist acts can often be shrouded in a level of ambiguity or confusion, and this can lead to conflicting information. The START institute does its best to filter through sources to gain the most accurate information however sometimes this is not possible. Therefore, there are many unknowns evident in the database – these can arise to conflicting information that means they cannot be properly attributed. 
+
+There are more biases and issues with regards to specific data fields and variables. These comments will be made along with the analysis. 
+
+
+# Note: Graphics & Formatting Comments 
+
+
+This report was created to be displayed using interactive charts through a web browser.
+
+Where available, please use the HTML Features to your advantage: 
+
+  - Hover to see further information   
+  - Click the legend items to hide it
+  - Double click legend items to isolate it  
+  - Zoom in on the map and click a single event to see further information & event summary  
+
+
+Some of the colour schemes are chosen to aesthetically represent the data being discussed however they do not have the correct level of contrast to be viewed in a printed or PDF format. 
+
+
+If this is required, Please contact me and the colours can be amended accordingly.
+
+
+
+# Import Libraries & Data
+
+## Import Libraries 
+
+```{r,results='hide', message=FALSE}
+## R Markdown Useful Functions 
+suppressWarnings(library(knitr));
+
+## Data table visualisation 
+suppressWarnings(library(kableExtra));
+
+## HTML Tools 
+suppressWarnings(library(htmltools)); 
+suppressWarnings(library(htmlwidgets));
+
+## Create Interactive Plots
+suppressWarnings(library(plotly));
+
+## Data cleaning & Visuals 
+suppressWarnings(library(tidyverse)); 
+
+## Used for mapping 
+suppressWarnings(library(leaflet));
+
+## Colour palettes
+suppressWarnings(library(RColorBrewer));
+
+## Create Tree Map
+suppressWarnings(library(treemapify));
+
+## Handle Units 
+suppressWarnings(library(scales))
+
+## Add extra graphing functions
+suppressWarnings(library(ggExtra))
+```
+
+
+## Load The Data & Overview
+
+```{r import_data,results='hide',fig.keep='all'}
+# Load data from excel - this is a large database and can take a few moments
+gtd_data <- read.csv("./00 Data/globalterrorismdb_0221dist.csv");
+
+```
+
+
+### Head of data
+
+```{r}
+
+head(gtd_data, 5) %>%
+  kbl() %>%
+    kable_paper("hover", "condensed", full_width = T) %>%
+    column_spec(column = 19, width_min = "800px" )  %>%
+    scroll_box(width = "100%", height = "400px")
+
+```
+ 
+
+### Structure of Imported Data
+
+The data set contains 201,183 observations and 135 variables. 
+
+```{r}
+str(gtd_data)
+
+```
+ 
+
+## Review & Data Summary  
+From the overview of the structure there are clear issues with regards to data formatting and missing information that needs to be resolved. There are also a significant number of variables that will not be required for the analysis questions explored. 
+
+The volume of missing or incomplete data is something that is known from context about this dataset as a lot of the information surrounding many attacks is either missing or unknown. In this data set there are a few different ways this has been encoded. Some have been coded with -99, some are NAs, and some are blank. As such a lot of cleaning will be required to ensure that this dataset is usable for analysis and exploration. 
+
+
+# Primary Data Cleaning 
+The data has many missing values and know issues that need to be resolved. In this section the majority of the data cleaning will take place however further and more specific data cleaning will be applied in later steps as required by the exploration process. 
+
+
+## Rename Varaible With Import Issue
+
+Rename "ï..eventid" to "eventid", this seems to be an error with how the data is being read into R and is the firth thing to be resolved to ensure that ther are no errors in selecting this variable later on.
+
+```{r}
+
+gtd_data <- gtd_data %>%
+  rename( eventid = ï..eventid	);
+
+```
+
+ 
+
+
+## Selected Variables & Data Explaination 
+
+From the 135 variables a subset of 37 variables has been selected in order to perform analysis and exploration. These variables have been chosen in order to answer the primary research questions. Others may be incorporated as needed however the follow list will be updated to accurately reflect what is being used. 
+
+Below is the information about the variables selected for the analysis. This includes their type, information about the variable, and any coding used.
+
+> **GTD ID**  
+>(eventid)  
+>Numeric Variable  
+>Incidents from the GTD follow a 12-digit Event ID system.  
+>• First 8 numbers – date recorded “yyyymmdd”.  
+>• Last 4 numbers – sequential case number for the given day (0001, 0002 etc). This is “0001” unless there is more than one case occurring on the same date.  
+>For example, an incident in the GTD occurring on 25 July 1993 would be numbered as “199307250001”. An additional GTD case recorded for the same day would be “199307250002”. The next GTD case recorded for that day would be “199307250003”, etc.
+>In rare cases, corrections to the date of a GTD attack are made. In order to maintain stable Event ID numbers, date changes are not reflected in the Event ID.  
+>
+>**Year**  
+>(iyear)  
+>Numeric Variable  
+>This field contains the year in which the incident occurred. In the case of incident(s) occurring over an extended period, the field will record the year when the incident was initiated.  
+>
+>**Month**  
+>(imonth)  
+>Numeric Variable  
+>This field contains the number of the month in which the incident occurred. In the case of incident(s) occurring over an extended period, the field will record the month when the incident was initiated.  
+>For attacks that took place between 1970 and 2011, if the exact month of the event is unknown, this is recorded as “0.” For attacks that took place after 2011, if the exact month of the event is unknown, this is recorded as the midpoint of the range of possible dates reported in source materials and the full range is recorded in the Approximate Date (approxdate) field below.  
+>
+>**Day**  
+>(iday)  
+>Numeric Variable  
+>This field contains the numeric day of the month on which the incident occurred. In the case of incident(s) occurring over an extended period, the field will record the day when the incident was initiated.  
+>For attacks that took place between 1970 and 2011, if the exact day of the event is unknown, this is recorded as “0.” For attacks that took place after 2011, if the exact day of the event is unknown, this is recorded as the midpoint of the range of possible dates reported in source materials.   
+>
+>**Summary**    
+>(summary)    
+>Text Variable  
+A brief narrative summary of the incident, noting the “when, where, who, what, how, and why.”  
+Note: This field is presently only systematically available with incidents occurring after 1997.  
+>
+>**Country**  
+>(country_txt)  
+>Categorical Variable  
+This field identifies the country or location where the incident occurred. Separatist regions, such as Kashmir, Chechnya, South Ossetia, >Transnistria, or Republic of Cabinda, are coded as part of the “home” country.  
+>
+>In the case where the country in which an incident occurred cannot be identified, it is coded as “Unknown.”  
+>Note that the geo-political boundaries of many countries have changed over time. In a number of cases, countries that represented the location of terrorist attacks no longer exist; examples include West Germany, the USSR and Yugoslavia. In these cases the country name for the year the event occurred is recorded. As an example, a 1989 attack in Bonn would be recorded as taking place in West Germany (FRG). An identical attack in 1991 would be recorded as taking place in Germany.  
+>
+>**Region**  
+>(region_txt)  
+>Categorical Variable  
+This field identifies the region in which the incident occurred. The regions are divided into the following 12 categories.  
+>
+>**City**  
+>(city)  
+>Text Variable  
+>This field contains the name of the city, village, or town in which the incident occurred. If the city, village, or town for an incident is unknown, then this field contains the smallest administrative area below provstate which can be found for the incident (e.g., district).  
+>
+>**Latitude**  
+>(latitude)  
+>Numeric Variable  
+>This field records the latitude (based on WGS1984 standards) of the city in which the event occurred.  
+>
+>**Longitude**  
+>(longitude)  
+>Numeric Variable  
+>This field records the longitude (based on WGS1984 standards) of the city in which the event occurred.    
+>
+>**Attack Type**  
+>(attacktype1_txt)  
+>Categorical Variable  
+>This field captures the general method of attack and often reflects the broad class of tactics used. It consists of nine categories, which are defined below. Up to three attack types can be recorded for each incident. Typically, only one attack type is recorded for each incident unless the attack is comprised of a sequence of events.  
+>When multiple attack types may apply, the most appropriate value is determined based on the hierarchy below. For example, if an assassination is carried out through the use of an explosive, the Attack Type is coded as Assassination, not Bombing/Explosion. If an attack involves a sequence of events, then the first, the second, and the third attack types are coded in the order of the hierarchy below rather than the order in which they occurred.  
+>Attack Type Hierarchy:  
+> - Assassination  
+> - Hijacking  
+> - Kidnapping  
+> - Barricade Incident  
+> - Bombing/Explosion 
+> - Armed Assault  
+> - Unarmed Assault  
+> - Facility/Infrastructure Attack  
+> - Unknown  
+>
+>**Success**  
+>(success)  
+>Categorical Variable   
+>Success of a terrorist strike is defined according to the tangible effects of the attack. Success is not judged in terms of the larger goals of the perpetrators. For example, a bomb that exploded in a building would be counted as a success even if it did not succeed in bringing the building down or inducing government repression.   
+>The definition of a successful attack depends on the type of attack. Essentially, the key question is whether or not the attack type took place. If a case has multiple attack types, it is successful if any of the attack types are successful, with the exception of assassinations, which are only successful if the intended target is killed.  
+>
+>**Suicide**   
+>(suicide)  
+>Categorical Variable  
+>This variable is coded “Yes” in those cases where there is evidence that the perpetrator did not intend to escape from the attack alive.  
+>
+>**Weapon Type**  
+>(weaptype1_txt)  
+>Categorical Variable   
+>Up to four weapon types are recorded for each incident. This field records the general type of weapon used in the incident.  
+>
+>**Target/Victim Type**    
+>(targtype1_txt)  
+>Categorical Variable  
+>The target/victim type field captures the general type of target/victim. When a victim is attacked specifically because of his or her relationship to a particular person, such as a prominent figure, the target type reflects that motive. For example, if a family member of a government official is attacked because of his or her relationship to that individual, the type of target is “government.”  
+>Target/Victim Type:     
+> - Business     
+> - Government (General)     
+> - Police     
+> - Military     
+> - Abortion Related   
+> - Airports & Aircraft     
+> - Government (Diplomatic)   
+> - Educational Institution   
+> - Food Or Water Supply     
+> - Journalists & Media   
+> - Maritime (Includes Ports And Maritime Facilities)   
+> - Ngo   
+> - Other   
+> - Private Citizens & Property   
+> - Religious Figures/Institutions   
+> - Telecommunication   
+> - Terrorists/Non-State Militias   
+> - Tourists   
+> - Transportation (Other Than Aviation)   
+> - Unknown   
+> - Utilities   
+> - Violent Political Parties   
+>
+>**Target/Victim Subtype**  
+>(targsubtype1_txt)  
+>Categorical Variable  
+>The target subtype variable captures the more specific target category and provides the next level of designation for each target type. If a target subtype is not applicable this variable is left blank.  
+>
+>**Nationality of Target/Victim**  
+>(natlty1_txt)  
+>Categorical Variable  
+>This is the nationality of the target that was attacked, and is not necessarily the same as the country in which the incident occurred, although in most cases it is. For hijacking incidents, the nationality of the plane is recorded and not that of the passengers.  
+>
+>**Perpetrator Group Name**  
+>(gname)  
+>Text Variable  
+>This field contains the name of the group that carried out the attack. In order to ensure consistency in the usage of group names for the database, the GTD database uses a standardized list of group names that have been established by project staff to serve as a reference for all subsequent entries.  
+>In the event that the name of a formal perpetrator group or organization is not reported in source materials, this field may contain relevant information about the generic identity of the perpetrator(s) (e.g., “Protestant Extremists”). Note that these categories do not represent discrete entities. They are not exhaustive or mutually exclusive (e.g., “student radicals” and “left-wing militants” may describe the same people). They also do not characterize the behavior of an entire population or ideological movement. For many attacks, generic identifiers are the only information available about the perpetrators. Because of this they are included in the database to provide context; however, analysis of generic identifiers should be interpreted with caution.  
+>If no information about the perpetrator group is available, this field is coded as “Unknown.”  
+>
+>**Number of Perpetrators**  
+>(nperps)  
+>Numeric Variable  
+>This field indicates the total number of terrorists participating in the incident. (In the instance of multiple perpetrator groups participating in one case, the total number of perpetrators, across groups, is recorded). There are often discrepancies in information on this value.  
+>Where several independent credible sources report different numbers of attackers, the value of this variable reflects the number given by the majority of sources, unless there is reason to do otherwise. Where there is no majority figure among independent sources, the database records the lowest proffered perpetrator figure, unless there is clear reason to do otherwise. In cases where the number of perpetrators is stated vaguely, for example “…at least 11 attackers”, then the lowest possible number is recorded, in this example, “11.” “-99” or “Unknown” appears when the number of perpetrators is not reported.  
+>
+>**Number of Perpetrators Captured**  
+>(nperpcap)  
+>Numeric Variable  
+>This field records the number of perpetrators taken into custody. “-99” or “Unknown” appears when there is evidence of captured, but the number is not reported.  
+>Divergent reports on the number of perpetrators captured are dealt with in same manner used for the Number of Perpetrators variable described above.  
+>Note: This field is presently only systematically available with incidents occurring after 1997.  
+>
+>**Claim of Responsibility?**   
+>(claimed)  
+>Categorical Variable  
+>This field is used to indicate whether a group or person(s) claimed responsibility for the attack. If marked “Yes”, it indicates that a person or a group did in fact claim responsibility. When there are multiple perpetrator groups involved, this field refers to the First >Perpetrator Group (separate fields for the Second and Third groups follow below).  
+>Note: This field is presently only systematically available with incidents occurring after 1997.   
+>
+>**Mode for Claim of Responsibility**  
+>(claimmode_txt)  
+>Categorical Variable  
+This records one of 10 modes used by claimants to claim responsibility and might be useful to verify authenticity, track trends in behavior, etc. If greater detail exists (for instance, a particularly novel or strange mode is used) this information is captured in the “Additional Notes” field.  
+>Note: This field is presently only systematically available with incidents occurring after 1997.  
+>
+>**Motive**  
+>(motive)   
+>Text Variable   
+>When reports explicitly mention a specific motive for the attack, this motive is recorded in the “Motive” field. This field may also include general information about the political, social, or economic climate at the time of the attack if considered relevant to the motivation underlying the incident.  
+>Note: This field is presently only systematically available with incidents occurring after 1997.  
+>
+>**Total Number of Fatalities**  
+>(nkill)  
+>Numeric Variable  
+This field stores the number of total confirmed fatalities for the incident. The number includes all victims and attackers who died as a direct result of the incident.  
+>Where there is evidence of fatalities, but a figure is not reported or it is too vague to be of use, this field remains blank. If information is missing regarding the number of victims killed in an attack, but perpetrator fatalities are known, this value will reflect only the number of perpetrators who died as a result of the incident. Likewise, if information on the number of perpetrators killed in an attack is missing, but victim fatalities are known, this field will only report the number of victims killed in the incident.  
+>Where several independent sources report different numbers of casualties, the database will usually reflect the number given by the most recent source. However,the most recent source will not be used if the source itself is of questionable validity or if the source bases its casualty numbers on claims made by a perpetrator group. When there are several “most recent” sources published around the same time, or there are concerns about the validity of a recent source, the majority figure will be used. Where there is no majority figure among independent sources, the database will record the lowest proffered fatality figure, unless that figure comes from a source of questionable validity or there is another compelling reason to do otherwise. Conflicting reports of fatalities will be noted in the “Additional Notes” field.  
+>
+>**Total Number of Injured**  
+>(nwound)  
+Numeric Variable  
+>This field records the number of confirmed non-fatal injuries to both perpetrators and victims. It follows the conventions of the “Total Number of Fatalities” field described above.  
+>
+>**Extent of Property Damage**    
+>(propextent_txt)    
+>Categorical Variable   
+>If “Property Damage?” is “Yes,” then one of the following four categories describes the extent of the property damage:  
+>   1 = Catastrophic (likely ≥ $1 billion)    
+>   2 = Major (likely ≥ $1 million but < $1 billion)    
+>   3 = Minor (likely < $1 million)    
+>   4 = Unknown  
+>
+>**Value of Property Damage (in USD)**  
+>(propvalue)  
+>Numeric Variable  
+>If “Property Damage?” is “Yes,” then the exact U.S. dollar amount (at the time of the incident) of total damages is listed. Where applicable, property values reported in foreign currencies are converted to U.S. dollars before being entered into the GTD. If no dollar figure is reported, the field is left blank. That is, a blank field here does not indicate that there was no property damage but, rather, that no precise estimate of the value was available. The value of damages only includes direct economic effects of the incident (i.e. cost of buildings, etc.) and not indirect economic costs (longer term effects on the company, industry, tourism, etc.).  
+>
+>**Total Number of Hostages/ Kidnapping Victims**  
+>(nhostkid)  
+>Numeric Variable  
+>This field records the total number of hostages or kidnapping victims. For successful hijackings, this value will reflect the total number of crew members and passengers aboard the vehicle at the time of the incident.  
+>As with other fields, where several independent sources report different numbers of hostages, the GTD reflects the number given by the most recent source, unless there is reason to do otherwise. When there are several most recent sources available, or there are question about the >validity of a recent source, the GTD will report the majority figure from a group of independent sources. Where there is no majority figure among independent sources, the database will record the lowest proffered hostage figure, unless there is clear reason to do otherwise.  
+In cases where the number of hostages or kidnapping victims is stated vaguely, for example, “…at least 11 hostages”, then the lowest possible number will be recorded, in this example “11.” If the number of hostages is unknown or unidentified, this field records “-99” (unknown).  
+>
+>**Hours of Kidnapping / Hostage Incident**
+>(nhours)  
+>Numeric Variable  
+>If the “Attack Type” is “Hostage Taking (Kidnapping),” “Hostage Taking (Barricade Incident),” or a successful “Hijacking,” then the duration of the incident is recorded either in this field or in the next field depending on whether the incident lasted a matter of hours or days. If neither hours nor days are known, both fields are coded as “-99” (unknown).  
+>If the incident lasted for less than 24 hours, this field records the approximate number of hours.
+>If the incident lasted for more than 24 hours (i.e., at least one day), then the approximate number of days is recorded in the next field.  
+>
+>**Kidnapping/Hostage Outcome**  
+>(hostkidoutcome_txt)  
+>Categorical Variable  
+>This field captures the eventual fate of hostages and kidnap victims. If the “Attack Type” is “Hostage Taking (Kidnapping),”“Hostage Taking (Barricade Incident),” or a successful “Hijacking,” then this field applies. The seven values for this field are:  
+>   1 = Attempted Rescue  
+>   2 = Hostage(s) released by perpetrators  
+>   3 = Hostage(s) escaped (not during rescue attempt)  
+>   4 = Hostage(s) killed (not during rescue attempt)  
+>   5 = Successful Rescue  
+>   6 = Combination  
+>   7 = Unknown  
+>
+>**Number Released/Escaped/Rescued**  
+>(nreleased)  
+>Numeric Variable  
+>If the “Attack Type” is “Hostage Taking (Kidnapping),” “Hostage Taking (Barricade Incident),” or a successful “Hijacking,” then this field will apply. This field records the number of hostages who survived the incident.  
+>As with the total number of kidnapping victims, where several independent sources report different numbers of hostages, the database will reflect the number given by the most recent source, unless there is reason to do otherwise. If there are several most recent sources available, the majority number form a group of independent sources will be used, unless there is reason to do otherwise. Where there is no majority figure among independent sources, the database will record the lowest proffered hostage released/escaped/rescued figure, unless there is clear reason to do otherwise.  
+>In cases where the number of hostages released/escaped/rescued is stated vaguely, for example “…at least 11 hostages were released”, then the lowest possible number will be recorded, in this example “11.” If the fate of the hostages is unknown, this field will record “-99.” ^[National Consortium for the Study of Terrorism and Responses to Terrorism (START), University of Maryland. (2019). The Global Terrorism Database (GTD) Retrieved from "https://www.start.umd.edu/gtd"]
+> `r tufte::quote_footer('Extracted From: Global Terrorism Database Code Book')`
+
+
+
+## Reducing Number of fields 
+
+Not all the variables are required for the analysis questions and as such many have been removed to ensure simplicity in the modeling, viewing of the data, and ease of use.
+
+Below the variables are selected and a the head of the data is displayed as an example. 
+
+```{r}
+## Select Subset of variables 
+gtd_data <- gtd_data %>%
+  select(
+    eventid,
+    iyear,
+    imonth,
+    iday,
+    country_txt,
+    region_txt,
+    provstate,
+    city,
+    latitude,
+    longitude,
+    summary,
+    success,
+    suicide,
+    attacktype1_txt,
+    targtype1_txt,
+    targsubtype1_txt,
+    corp1,
+    target1,
+    natlty1_txt,
+    gname,
+    motive,
+    individual,
+    nperps,
+    nperpcap,
+    claimed,
+    claimmode_txt,
+    weaptype1_txt,
+    nkill,
+    nwound,
+    propextent_txt,
+    propvalue, 
+    nhostkid, 
+    nhours,
+    hostkidoutcome_txt, 
+    nreleased
+  )
+
+## View Sample of what has been returned
+head(gtd_data, 5) %>%
+  kbl() %>%
+  kable_paper("hover", "condensed", full_width = T) %>%
+  column_spec(column = 19, width_min = "800px")  %>%
+  scroll_box(width = "100%", height = "400px")
+
+```
+
+
+## Cleaning Missing Values
+As seen in the documentation of the data where some values are not known and are coded with -99.  
+To avoid issues with calculations these are converted from -99 to NA.
+
+```{r}
+## Transform and override existing variables in the dataset 
+gtd_data <- gtd_data  %>%
+  mutate(
+    nperps = ifelse(nperps == -99, NA, nperps),
+    nperpcap = ifelse(nperpcap == -99, NA, nperpcap),
+    nhostkid = ifelse(nhostkid == -99, NA, nhostkid),
+    propvalue = ifelse(propvalue == -99, NA, propvalue),
+    nhours = ifelse(nhours == -99, NA, nhours), 
+    claimed = ifelse(claimed == -9, NA, claimed) 
+  )
+
+```
+
+
+## Missing Data
+There is a lot of missing data and to remove them all would leave very little information within the data frame. It is however important to see where the majority of missing data is. The exploration of is is something that will be looked into further to better understand data quality. 
+From the results below we can note that information pertaining to hostages and property value are the most comment number of missing values. 
+
+
+## Missing Data By Variable 
+
+
+```{r}
+## Get missing values
+missing_values <- gtd_data %>%
+  gather(key = "key", value = "val") %>%
+  mutate(is_missing = is.na(val)) %>%
+  group_by(key, is_missing) %>%
+  summarise(num_missing = n()) %>%
+  filter(is_missing == T) %>%
+  select(-is_missing) %>%
+  arrange(desc(num_missing))
+
+missing_values
+
+```
+<br/>
+
+Using the data collected before we can graph this the missing values to better understand how this will impact the data for each variable.
+
+The missing data is primarily in variables we would expect to see. Some of these were added to later collection efforts and therefore the information has not been collected may therefore be marked as NA. 
+
+Information regarding hostages is difficult to get from certain areas and when information is known many times there is vested interest from counter terrorist organizations to not have the information released publicly. As this database is based on public, non-classified information, this is expected to be missing. 
+
+Property value is very difficult to define and as such this expected to be either unknown or incorrect. 
+
+The claimed variable was introduced as a variable in 1997 and therefore legacy data that has not been updated will be coded as NA. 
+
+Number of Perpetrators often goes unreported or is unknown as such we expect to see this with a high level of NA data points. 
+
+
+
+```{r}
+##Create Plot
+plot <- missing_values %>%
+  ggplot(aes(
+    x = num_missing ,
+    y = reorder(key, num_missing) ,
+    fill = reorder(key, num_missing)
+  )) +
+  geom_bar(stat = "identity",
+           width = 0.8,
+           position = position_dodge(width = 0.2)) +
+  xlab('Number of Missing Values') +
+  ylab('Variable Name') +
+  scale_fill_manual(values = colorRampPalette(brewer.pal(9, "Oranges"))(length(unique(missing_values$key)))) +
+  geom_text(
+    mapping = aes(label = ifelse(
+      num_missing > 18000, prettyNum(num_missing, big.mark = ",") , " "
+    )) ,
+    position = position_stack(vjust = 0.5),
+    colour = "white",
+    size = 3
+  )
+
+## Apply theme with graph and number of colours
+plot <- plot +
+  theme_light() +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.position = "none",) +
+  labs(title = "Number of Missing Variables")
+
+
+## plot graph
+htmltools::div( ggplotly(plot), align="center" )
+
+
+
+```
+
+We can also see the proportion of missing values as this will be important to understand when analyzing the data. 
+
+*(Graphic adapted from Jens Laufer's blog)* ^[Jens Laufer's blog, https://jenslaufer.com/data/analysis/visualize_missing_values_with_ggplot.html"] 
+
+```{r}
+missing.values <- gtd_data %>%
+  gather(key = "key", value = "val") %>%
+  mutate(isna = is.na(val)) %>%
+  group_by(key) %>%
+  mutate(total = n()) %>%
+  group_by(key, total, isna) %>%
+  summarise(num.isna = n()) %>%
+  mutate(pct = num.isna / total * 100)
+
+
+levels <-
+    (missing.values  %>% filter(isna == T) %>% arrange(desc(pct)))$key
+
+plot <- missing.values %>%
+      ggplot() +
+        geom_bar(aes(x = reorder(key, desc(pct)), 
+                     y = pct, fill=isna), 
+                 stat = 'identity', alpha=0.8) +
+      scale_x_discrete(limits = levels) +
+      scale_fill_manual(name = "", 
+                        values = c('steelblue', 'tomato3'), 
+                        labels = c("Present", "Missing")) +
+      coord_flip() +
+      labs( x ='Variable', y = "Percentage of missing values")
+
+## Apply theme with graph and number of colours
+plot <- plot +
+  theme_light() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(title = "Percentage of Missing Variables")
+
+
+## plot graph
+htmltools::div( ggplotly(plot), align="center" )
+```
+## Exploring Missing Values in Rows
+
+It is important to note that this will not show where categorical variables are either blank or encoded unknown. 
+
+*(graphic adapted from Jens Laufer's blog)* ^[Jens Laufer's blog, https://jenslaufer.com/data/analysis/visualize_missing_values_with_ggplot.html"]
+
+```{r}
+plot <- gtd_data %>%
+  mutate(id = row_number()) %>%
+  gather(-id, key = "key", value = "val") %>%
+  mutate(isna = is.na(val)) %>%
+  ggplot(aes(key, id, fill = isna)) +
+    geom_raster(alpha=0.8) +
+    scale_fill_manual(name = "",
+        values = c('steelblue', 'tomato3'),
+        labels = c("Present", "Missing")) +
+    scale_x_discrete(limits = levels) +
+    labs(x = "Variable",
+           y = "Row Number") +
+    coord_flip()
+
+## Apply theme with graph and number of colours
+plot <- plot +
+  theme_light() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(title = "Missing Values in Rows")
+
+
+## plot graph
+plot
+```
+
+## Missing Values by Region 
+
+Whilst it is useful to see what regions have the most missing values this without context of number of attacks and further analysis of the variables missing is relatively vague and should be reviewed with caution. 
+
+```{r}
+
+region_missing <- gtd_data %>% 
+  group_by(region_txt) %>% 
+  summarise_all(~sum(is.na(.))) %>% 
+  transmute(region_txt, 
+            num_missing = rowSums(.[-1]))
+
+##Create Plot
+plot <- region_missing %>%
+  ggplot(aes(
+    x = num_missing ,
+    y = reorder(region_txt, num_missing) ,
+    fill = reorder(region_txt, num_missing)
+  )) +
+  geom_bar(stat = "identity",
+           width = 0.8,
+           position = position_dodge(width = 0.2)) +
+  xlab('Number of Missing Values') +
+  ylab('Variable Name') +
+  scale_fill_manual(values = colorRampPalette(brewer.pal(9, "Oranges"))(length(unique(region_missing$region_txt)))) +
+  geom_text(
+    mapping = aes(label = ifelse(
+      num_missing > 18000, prettyNum(num_missing, big.mark = ",") , " "
+    )) ,
+    position = position_stack(vjust = 0.5),
+    colour = "white",
+    size = 3
+  )
+
+## Apply theme with graph and number of colours
+plot <- plot +
+  theme_light() +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.position = "none",) +
+  labs(title = "Number of Missing Variables by Region")
+
+
+## plot graph
+htmltools::div( ggplotly(plot), align="center" )
+
+
+
+```
+
+## Apply Treatment (Testing)
+I have looked into the application of the vtreat process to automate the data cleaning process and ensure replication. However there were some concerns with the process and as such this is not used throughout the primary analysis. It may be tweaked further and used if needed in any modeling later on. 
+
+```{r}
+
+library(vtreat)
+
+varlist <- setdiff(colnames(gtd_data),
+  c("eventid"))
+
+treatement_plan <- design_missingness_treatment( gtd_data, varlist =  varlist)
+
+training_prepared <- prepare( treatement_plan, gtd_data )
+
+## View Sample of what has been returned
+head(training_prepared, 5) %>%
+  kbl() %>%
+  kable_paper("hover", "condensed", full_width = T) %>%
+  column_spec(column = 19, width_min = "800px")  %>%
+  scroll_box(width = "100%", height = "400px")
+
+```
+
+
+## Updating Missing Categories with Unknown 
+
+Missing categorical variables can be replaced with "unknown" in order to match the coding of other variables. This is done to ensure that we can still see the counts and other statistics within the data for this category.
+
+```{r}
+## select the categories with missing categories 
+gtd_data <- gtd_data %>% 
+  mutate(
+    corp1 = ifelse(	is.na(corp1) , "Unknown", 	corp1)
+  )
+
+count_missing = function(df) {
+  sapply(df, FUN = function(col) sum(is.na(col)) )
+}
+
+
+## check the outcomes 
+nacounts <-  count_missing(gtd_data); 
+hasNA <- which(nacounts>0)
+
+sort(nacounts[hasNA] , decreasing = TRUE)
+
+
+```
+
+
+
+## Convert Non-Numerical Values to Categories 
+
+```{r}
+##Convert integers to factors 
+gtd_data$eventid = factor(gtd_data$eventid)
+gtd_data$success <- factor(gtd_data$success );
+gtd_data$claimed = factor(gtd_data$claimed)
+gtd_data$individual = factor(gtd_data$individual)
+gtd_data$success = factor(gtd_data$success)
+gtd_data$suicide = factor(gtd_data$suicide)
+
+## Check the last two cleaning operations using str
+str(gtd_data)
+
+```
+ 
+
+
+## Data Transformation 
+
+Variables were created to aid in the analysis process by combining others. Whilst some were created and added to the whole dataset as they are used across many graphs some were only created locally for specific visualisations. The two variables that were important to create for the dataset was the following: 
+
+-	**Number of Casualties** (ncasualites): the sum of all people either killed or wounded in an attack 
+
+-	**Date** (date) the combination of year, month, and day variables.  In creating a new date variable that we can use for calculating frequencies of attacks we see the issue with the coding. Where the exact day of an attack is unknown the day variable is coded with 0. When calling the make date function this will become an NA value. I think this is good as it will potentially through of calculations and skew the data if we change this to be the first of a month or another date. Some larger monthly calculations might be used instead.
+
+
+```{r}
+
+gtd_data <- gtd_data  %>%
+  group_by(eventid) %>%
+  mutate(
+    ncasualties = sum(nkill) + sum(nwound),
+    date = lubridate::make_date(iyear,imonth, iday)
+    
+  ) %>%
+  ungroup()
+
+
+## View Sample of what has been returned
+head(gtd_data, 10) %>%
+  select(eventid , nkill, nwound, ncasualties, iyear, imonth, iday , date) %>% 
+  kbl() %>%
+  kable_paper("hover", "condensed", full_width = T) %>%
+  scroll_box(width = "100%", height = "400px")
+
+```
+ 
+
+# Initialising functions 
+
+## Setting Up Colour Scale Functions & Themes
+
+This section initializes a set number of graphics that take in data frames and plot macro level visualizations. 
+These reusable graphics will allow me to quickly explore the data related to regions, terrorist groups, or other filters. 
+
+### Theme Setup 
+
+```{r}
+## Standard Theme used
+graph_theme <-  theme_light() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+## Blank Theme 
+blank_theme <- theme_minimal() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    panel.border = element_blank(),
+    panel.grid = element_blank(),
+    axis.ticks = element_blank(),
+    plot.title = element_text(size = 14, margin = margin(5,5,0,5) ),
+    legend.text=element_text(size=10) 
+  )
+```
+
+
+### Setting Up Colour Scheme Function 
+
+Setting up a function that quickly applies themes to graphs has worked well to have the bulk controls over colours, fonts and themes in one location. The DRY (Don't Repeat Yourself) principle in coding is why this has been done. It means that if anything needs to be changed later on it can be done very quickly and easily. 
+
+A function rather than as a regular ggplot theme has been chosen to apply templates to have better control over the plot's colours and how they are produced from the number of elements. 
+
+As a note for the colour scheme, please see the comment after the introduction. This has been formatted for web display using interactive plots. If you require a PDF or printed version the colours can be updated. 
+
+
+
+```{r}
+
+## Overall Colour Palette
+colour_palette <- "Oranges"
+
+
+## Function to get the colour palette
+getPalette = colorRampPalette(brewer.pal(9, colour_palette))
+
+
+## Function for the application of themes
+apply_theme <- function(ggplot_graph , colourCount) {
+  ## Handle the applications of colour
+
+  if (colourCount > 9)
+  {
+    ggplot_graph <-   ggplot_graph +
+      scale_color_manual(values = getPalette(colourCount)) +
+      scale_fill_manual(values = getPalette(colourCount))
+  }
+  else
+  {
+    if (colourCount < 3)
+    {
+      colourCount <- 3
+    }
+    ggplot_graph <-   ggplot_graph +
+      scale_color_manual(values = rev(brewer.pal(colourCount, colour_palette))) +
+      scale_fill_manual(values = rev(brewer.pal(colourCount, colour_palette)))
+  }
+
+  ## Apply non colour related theme overrides
+  ggplot_graph <- ggplot_graph +
+    theme_light() +
+    theme(plot.title = element_text(hjust = 0.5))
+
+  ## Return the graph
+  return(ggplot_graph)
+}
+
+
+```
+
+
+
+
+
+
+
+## Primary Reusable Data Visualization Functions
+
+This function takes in data of either areas or groups and creates a set of macro level data visuals to enable the user to quickly get a better picture of the information through standard questions. 
+
+
+Whilst this code works in R studio and makes it very easy to create repeatable visualizations from subset input data, when the document is knitted together it does not plot more than one graph. This is incredibly frustrating and I have looked into ways of fixing this but with the numerous visualization types and the importance of graphic order, I was unable to implement this in this assignment.
+
+```{r Create Graphs Function }
+##Function for creating plots
+##Not working as it seems the knit command only allows for one plot per chunk... this is very frustrating 
+##https://stackoverflow.com/questions/48458390/how-to-print-html-interactive-plotly-graphs-within-a-lapply-loop-using-knitr-ren
+create_graphs <- function(local_data, replace_Name, is_group)
+{
+  ## Initialise List
+  plot_list <-  list();
+  
+  ## check for missing input flags
+  if (missing(is_group))
+  {
+    is_group <- TRUE;
+  }
+  
+  ## Number of Attacks
+  print(plot.number_attacks_over_time(local_data , replace_Name))
+  
+  ## Nkill and Wounded Over Time
+  print(plot.nkill_nWound_over_time(local_data , replace_Name))
+  
+  
+  #### Plot Map
+  print(plot.map(local_data))
+  
+  ## Weapon Types
+  print(plot.Weaponstype (local_data , replace_Name))
+  
+  ## Weapon Attacks Over Time
+  print(plot.Weapons_over_time(local_data , replace_Name))
+  
+  
+  ## Attack Type Tree
+  if (is_group)
+  {
+     print(plot.treemap.target_attackt_weap_n(local_data, replace_Name))
+
+  }
+  else
+  {
+    ## Plot Groups by Number of casualties
+    print(plot.groups_by_casualties(local_data , replace_Name))
+
+    print(plot.treemap.groupname_attackt_weap_n (local_data, replace_Name));
+
+  }
+
+
+  ## Return so last plot doesn't print twice
+  return("Done")
+}
+
+```
+
+
+
+
+### Line Graph: Number of Attacks Over Time
+```{r , message = FALSE, warning = FALSE, results='hide'}
+plot.number_attacks_over_time <- function(local_data , replace_Name, annotations)
+{
+    ## check for missing input flags
+  if (missing(annotations))
+  {
+    annotations <- NA;
+  }
+  
+  
+   ## Data Transformation
+  data <- local_data %>%
+    select(iyear) %>%
+    count(iyear)
+  
+  ## Create Plot
+  plot <-  data %>%
+    ggplot(aes(x = iyear)) +
+    geom_line(mapping = aes(y = n , colour = "orange"), )
+  
+  ## apply theme with graph and number of colours
+  plot <- apply_theme(plot, 1) +
+    theme(legend.position = "none", ) +
+    labs(y = 'Number of Attacks' ,
+         x = 'Year',
+         title = paste0( replace_Name, ": Number of Attacks by Year")
+    );
+  
+  ## Add annotations if they have been created
+  if( ! is.na(annotations)){
+    plot <- plot +annotations;
+  }
+  
+  ## plot graph
+ return(htmltools::div( ggplotly(plot), align="center" ));
+}
+```
+
+
+### Line Chart: Number Of Deaths and Wounded
+```{r , message = FALSE, warning = FALSE, results='hide'}
+plot.nkill_nWound_over_time <- function(local_data , replace_Name, annotations)
+{
+    ## check for missing input flags
+  if (missing(annotations))
+  {
+    annotations <- NA;
+  }
+
+  ## Transform data
+  data <-  local_data %>%
+    select(iyear , nkill, nwound, ncasualties) %>%
+    group_by(iyear) %>%
+    summarise(nkill = sum(nkill, na.rm = TRUE),
+              nwound = sum(nwound, na.rm = TRUE))
+  
+  
+  ## Gather the data to transpose it
+  gathered_data <- data %>%
+    gather(key, value, nkill, nwound) %>% 
+    mutate(
+       Values   = paste0('\nYear: ', iyear , '\n',
+                                       'Number of People: ', value, '\n')
+    )
+
+  
+  ## Create Plot
+  plot <- ggplot(data = gathered_data, aes(x = iyear, label = Values)) +
+    geom_line(mapping = aes(y = value , colour = key )) 
+  
+  
+  
+  
+  
+  ## apply theme with graph and number of colours
+  plot <- apply_theme(plot, length(unique(gathered_data$key))) +
+    labs(y = 'Number of People' ,
+         x = 'Year',
+         title = paste0( replace_Name, ": Number of Deaths and Wounded by Year"), 
+         fill = "Measure:"
+    );
+
+  
+    ## Add annotations if they have been created
+  if( ! is.na(annotations)){
+    plot <- plot +annotations;
+  }
+  
+  
+## tool tip
+#Convert to Plotly for interactivity
+plotly <- ggplotly(plot ,  tooltip=  "Values"); 
+  
+
+  ## plot graph
+return(htmltools::div( plotly, align="center" ));
+}
+```
+
+### Bar Chart: Weapons Used in Attacks 
+```{r , message = FALSE, warning = FALSE, results='hide'}
+plot.Weaponstype <- function(local_data , replace_Name , filter_value)
+{
+  
+     ## check for missing input flags
+  if (missing(filter_value))
+  {
+    filter_value <- 0;
+  }
+
+  ## Transform data
+  data <- local_data %>%
+    select(weaptype1_txt , ncasualties) %>%
+    mutate(
+      weaptype1_txt = weaptype1_txt %>% str_replace_all(
+        '\\(not to include vehicle-borne explosives, i.e., car or truck bombs\\)',
+        " "
+      )
+    ) %>%
+    group_by(weaptype1_txt) %>%
+    summarise(ncasualties = sum(ncasualties, na.rm = TRUE)) 
+
+plot <- ggplot(data=data, aes(x= ncasualties , y= reorder(weaptype1_txt, ncasualties), fill = reorder(weaptype1_txt, ncasualties) ) ) +
+  geom_text(mapping=aes(
+  label= ifelse( ncasualties > filter_value, prettyNum( ncasualties ,big.mark=",") , "" )) , 
+    position = position_stack(vjust = 0.5), colour = "White",  size=3) +
+  geom_bar(stat="identity") +
+    xlab('Number of Casualties') +
+    ylab('Weapon Type');
+
+## apply theme with graph and number of colours 
+plot <- apply_theme(plot, length(unique(data$weaptype1_txt) )) + 
+      scale_color_manual(values = getPalette(length(unique(data$weaptype1_txt) ))) +
+      scale_fill_manual(values = getPalette(length(unique(data$weaptype1_txt) )))+
+  theme(
+    legend.position = 'none'
+  )+
+    labs( title = paste0( replace_Name, ": Number of Casualties Weapon Type")
+    ); 
+
+## plot graph 
+return(htmltools::div( ggplotly(plot), align="center" ));
+}
+```
+
+### Line Chart: Weapon Attacks Over Time
+```{r , message = FALSE, warning = FALSE, results='hide'}
+ plot.Weapons_over_time <- function(local_data , replace_Name)
+ {
+  ## Data Transformation
+  data <- local_data %>%
+    select(ncasualties, weaptype1_txt , iyear) %>%
+    mutate(ncasualties = replace_na(ncasualties, 0)) %>%
+    mutate(
+      weaptype1_txt = weaptype1_txt %>% str_replace_all(
+        '\\(not to include vehicle-borne explosives, i.e., car or truck bombs\\)',
+        " "
+      )
+    ) %>%
+    group_by(weaptype1_txt , iyear) %>%
+    summarise(ncasualties = sum(ncasualties)) %>%
+    arrange(ncasualties)
+
+
+  plot <- data %>%
+    ggplot(aes(x = iyear)) +
+    geom_line(mapping = aes(y = ncasualties, colour = weaptype1_txt), ) +
+    xlab('Year') +
+    ylab('Number of Casualties')
+
+  ## apply theme with graph and number of colours
+  local_palette <- colorRampPalette(brewer.pal(9, "Oranges"))
+
+
+  ## apply theme with graph and number of colours
+  plot <- apply_theme(plot, length(unique(data$weaptype1_txt))) +
+    theme() +
+    labs(
+         title = paste0(replace_Name , ": Number of Casualties Weapon Type Over Time"), 
+         fill = "Weapon Type"
+         )
+
+  ## plot graph
+ return(htmltools::div( ggplotly(plot), align="center" ));
+
+ 
+}
+```
+
+### Stacked Bar: Plotting Proportion of attack type used over time 
+```{r , message = FALSE, warning = FALSE, results='hide'}
+plot.proportion_attacktype_over_time <- function(local_data , replace_Name)
+{
+## Transform Data
+data <- gtd_data %>%
+        select(ncasualties, nwound, attacktype1_txt , iyear) %>%
+        mutate( ncasualties= replace_na(ncasualties, 0) ,nwound= replace_na(nwound, 0)) %>%
+        group_by(attacktype1_txt ,iyear) %>%
+        summarise(ncasualties = sum(ncasualties), nwound = sum(nwound)) 
+
+#### Create Stacked chart over time
+plot <- ggplot(data, aes(x=iyear ,  y= ncasualties, fill=reorder(attacktype1_txt, ncasualties) ) )+
+  geom_bar(width = 1, stat = "identity" , position = "fill") +
+    xlab('Year') +
+    ylab('Percentage Attack Type');
+
+## apply theme with graph and number of colours 
+plot <- apply_theme(plot, length(unique(data$attacktype1_txt))) +
+  labs(
+    title = paste0( replace_Name ,  ": Proportion of Attack Types over Time")
+  ) 
+
+ ## plot graph
+return(htmltools::div( ggplotly(plot), align="center" ));
+
+}
+```
+
+### Map: Mapping Function 
+```{r , message = FALSE, warning = FALSE, results='hide'}
+plot.map <- function(local_data)
+{
+  
+  summarised_Data <- local_data %>%
+    select(
+      eventid ,
+      country_txt,
+      targtype1_txt ,
+      longitude ,
+      latitude ,
+      gname,
+      attacktype1_txt,
+      nkill,
+      nwound,
+      iyear,
+      imonth,
+      iday ,
+      summary
+    ) %>%
+    filter(longitude != is.na(longitude) &
+             latitude != is.na(latitude)) %>%
+    mutate(
+      date = paste0(iday, "/", imonth, "/", iyear) ,
+      nkill = replace_na(nkill, 0) ,
+      nwound = replace_na(nwound, 0) ,
+      summary = ifelse(summary == "", "No Summary Provided", summary)
+      
+    )
+  
+  
+  summarised_Data <- summarised_Data %>%
+    mutate(
+      popup = paste0(
+        "<b> Event Id:",
+        summarised_Data$eventid,
+        "</b>",
+        "<br>Country: ",
+        summarised_Data$country_txt,
+        "<br>Date: ",
+        summarised_Data$date,
+        "<br>",
+        "<br><b>Event Information:</b> ",
+        "<br>Group Name: ",
+        summarised_Data$gname,
+        "<br>Target: ",
+        summarised_Data$targtype1_txt,
+        "<br>Attack Type: ",
+        summarised_Data$targtype1_txt,
+        "<br>People Killed: ",
+        summarised_Data$nkill,
+        "<br>People Wounded: ",
+        summarised_Data$nwound,
+        "<br><br><b>Summary: </b><br>",
+        summarised_Data$summary
+      ),
+      Hover = paste0(
+        "Date: ",
+        summarised_Data$date,
+        ".       ",
+        "Target: ",
+        summarised_Data$targtype1_txt ,
+        ".       (Click for more infromation)"
+      )
+    )
+  
+  
+  #set up base map
+  map <- leaflet::leaflet() %>%
+    addProviderTiles(providers$CartoDB.Positron) %>%
+    addProviderTiles(providers$CartoDB.Positron, group = "Light") %>%
+    addProviderTiles(providers$CartoDB.DarkMatter, group = "Dark") %>%
+    addProviderTiles(providers$OpenStreetMap, group = "OSM") %>%
+    addLayersControl(baseGroups = c('Light', 'Dark', 'OSM')) %>%
+    addMiniMap(
+      tiles = providers$CartoDB.Positron,
+      minimized = FALSE,
+      toggleDisplay = TRUE
+    )
+  
+  
+  
+  #Plot the mapping elements
+  map_groups <- map %>%
+    leaflet::addCircleMarkers(
+      data = summarised_Data,
+      popup = summarised_Data$popup,
+      label = summarised_Data$Hover,
+      
+      clusterOptions = markerClusterOptions()
+      
+    )
+  
+  
+  #Show map
+  return(map_groups)
+}
+```
+
+### Bar Chart: Groups by Number of Casualties 
+```{r , message = FALSE, warning = FALSE, results='hide'}
+plot.groups_by_casualties <- function(local_data , replace_Name , filter_value)
+{
+       ## check for missing input flags
+  if (missing(filter_value))
+  {
+    filter_value <- 0;
+  }
+  
+    ## Transform data
+  data <- local_data %>%
+    select(gname , ncasualties) %>%
+    filter( gname != "Unknown") %>% 
+    group_by(gname) %>%
+    summarise(ncasualties = sum(ncasualties, na.rm = TRUE)) %>% 
+    arrange(desc(ncasualties) )  %>% 
+    slice(1:10)
+
+
+plot <- ggplot(data=data, aes(x= ncasualties , y= reorder(gname, ncasualties), fill = reorder(gname, ncasualties) ) ) +
+  geom_text(mapping=aes(
+    label= ifelse(ncasualties > filter_value, prettyNum( ncasualties ,big.mark=","), " "   )) ,
+    position = position_stack(vjust = 0.5), colour = "White",  size=3) +
+  theme(
+    labs(
+       title = paste0("Ten Most Prolific Terrorist Groups in ", replace_Name)
+    )
+  )  +
+  geom_bar(stat="identity") +
+    xlab('Number of Casualties') +
+    ylab('Terrorist Group Name');
+
+## apply theme with graph and number of colours 
+plot <- apply_theme(plot, length(unique(data$gname) )) + 
+      scale_color_manual(values = getPalette(length(unique(data$gname) ))) +
+      scale_fill_manual(values = getPalette(length(unique(data$gname) )))+
+  theme(
+    legend.position = 'none'
+  ) +
+  labs(
+    title = paste0(replace_Name , ": Number of Casualties by Terrorist Group")
+  ); 
+
+## plot graph 
+return(htmltools::div( ggplotly(plot), align="center" ));
+  
+
+}
+```
+
+### Treemap Plot: plot based on target, attack type, number of attacks
+```{r , message = FALSE, warning = FALSE, results='hide'}
+plot.treemap.target_attackt_weap_n <- function(local_data, replace_Name)
+  {
+    data <- local_data %>%
+      select(targtype1_txt, attacktype1_txt, weaptype1_txt) %>%
+      filter(!is.na(targtype1_txt) ,!is.na(attacktype1_txt) ,!is.na(weaptype1_txt)) %>%
+      group_by(targtype1_txt, attacktype1_txt) %>%
+      summarise(nAttack =  n())
+    
+    
+    plot <- ggplot(
+      data,
+      aes(
+        area = nAttack,
+        label =   paste0(
+          attacktype1_txt,
+          "\n" ,
+          prettyNum(nAttack, big.mark = ","),
+          " Attacks"
+        ),
+        subgroup = targtype1_txt,
+        fill = attacktype1_txt
+      )
+    ) +
+      geom_treemap() +
+      geom_treemap_text(colour = "black",
+                        fontface = "italic",
+                        size = 7) +
+      geom_treemap_subgroup_border(colour = "White", size = 5) +
+      geom_treemap_subgroup_text(
+        place = "bottom",
+        grow = TRUE,
+        alpha = 0.75,
+        colour = "White",
+      )
+    
+    ## apply theme with graph and number of colours
+    plot <-
+      apply_theme(plot, length(unique(data$attacktype1_txt))) +
+    labs(y = 'Year' ,
+         x = 'Number of Attacks',
+         title = paste0(replace_Name, ": Attacks by Target Group, Attack Type,\n Scaled by Number of Attacks")
+    );
+    
+    ## plot graph
+    return(plot)
+    
+  }
+```
+
+### Treemap Plot: group by group name, attack type, weapon type and number of attacks
+```{r , message = FALSE, warning = FALSE, results='hide'}
+plot.treemap.groupname_attackt_weap_n <- function(local_data, replace_Name)
+  {
+    data <- local_data %>%
+      select(gname, attacktype1_txt, weaptype1_txt) %>%
+      filter(!is.na(gname) ,
+             !is.na(attacktype1_txt) ,
+             !is.na(weaptype1_txt)) %>%
+      group_by(gname, attacktype1_txt) %>%
+      summarise(nAttack =  n())
+    
+    
+    plot <- ggplot(data,
+                   aes(
+                     area = nAttack,
+                     label =   paste0(
+                       attacktype1_txt,
+                       "\n" ,
+                       prettyNum(nAttack, big.mark = ","),
+                       " Attacks"
+                     ),
+                     subgroup = gname,
+                     fill = attacktype1_txt
+                   )) +
+      geom_treemap() +
+      geom_treemap_text(colour = "black",
+                        fontface = "italic",
+                        size = 7) +
+      geom_treemap_subgroup_border(colour = "White", size = 5) +
+      geom_treemap_subgroup_text(
+        place = "bottom",
+        grow = TRUE,
+        alpha = 0.75,
+        colour = "White",
+      )
+    
+    ## apply theme with graph and number of colours
+    plot <-
+      apply_theme(plot, length(unique(data$attacktype1_txt))) +
+  labs(
+    title = paste0(replace_Name, ": Attacks by Group, Attack Type,\n Scaled by Number of Attacks")
+  ); 
+    
+    ## plot graph
+    return(plot)
+  }
+```
+
+### Histogram: Number of People Wounded (Log Scale)
+```{r , message = FALSE, warning = FALSE, results='hide'}
+plot.hist.nWounded <- function(local_data, replace_Name)
+{
+  
+  
+  data <- local_data %>%
+    select(nkill, nwound, propvalue) %>%
+    filter( ! is.na(nkill)) %>%
+    mutate(
+      nkill =  log(nkill) 
+      # nwound = log(replace_na(nwound, 0)),
+      # propvalue = log(replace_na(propvalue, 0))
+    )
+  
+  plot <- data %>%
+    ggplot() +
+    geom_histogram(mapping = aes(x = nkill),
+                   bins = 20,
+                   fill = "grey",) +
+    geom_density(aes(x = nkill  , y = 0.5 * ..count..),
+                 colour = "darkorange2",
+                 adjust = 3) +
+    xlab('Number of People killed (log Scale)') +
+    ylab('Frequency') +
+    graph_theme 
+  
+  
+  
+return(htmltools::div( ggplotly(plot), align="center" ));
+  
+}
+```
+
+### Histogram: Number of Casualties (Log Scale)
+```{r , message = FALSE, warning = FALSE, results='hide'}
+plot.hist.ncasualties <- function(local_data, replace_Name)
+{
+  
+  
+  data <- local_data %>%
+    select(nkill, nwound, propvalue, ncasualties) %>%
+    filter( ! is.na(ncasualties)) %>%
+    mutate(
+      ncasualties =  log(ncasualties) 
+      # nwound = log(replace_na(nwound, 0)),
+      # propvalue = log(replace_na(propvalue, 0))
+    )
+  
+  plot <- data %>%
+    ggplot( aes(x = ncasualties) ) +
+    geom_histogram(
+                   bins = 20,
+                   fill = "grey",) +
+    geom_density(aes( y = 0.5 * ..count..),
+                 colour = "darkorange2",
+                 adjust = 3) +
+    xlab('Number of Casualties (log Scale)') +
+    ylab('Frequency') +
+    graph_theme
+  
+  
+  
+return(ggplotly(plot));
+  
+}
+```
+
+### Histogram: Property Damage (Log Scale)
+
+```{r , message = FALSE, warning = FALSE, results='hide'}
+plot.hist.propvalue <- function(local_data, replace_Name)
+{
+  
+  
+  data <- local_data %>%
+    select( propvalue) %>%
+    filter( ! is.na(propvalue)) %>%
+    mutate(
+      propvalue =  log(propvalue) 
+   
+    )
+  
+  plot <- data %>%
+    ggplot( aes(x = propvalue) ) +
+    geom_histogram(
+                   bins = 20,
+                   fill = "grey",) +
+    geom_density(aes( y = 0.5 * ..count..),
+                 colour = "darkorange2",
+                 adjust = 3) +
+    xlab('Property Damage in $USA (log Scale)') +
+    ylab('Frequency') +
+    graph_theme
+  
+  
+  
+return(ggplotly(plot));
+  
+}
+
+```
+
+
+### Histogram: Subplot Casualties & Property Damage 
+```{r}
+
+plot.hist.propvalue_and_propdamage <- function(local_data, replace_Name)
+{
+  
+hist_1 <- plot.hist.ncasualties(data, replace_Name)
+
+hist_2 <- plot.hist.propvalue(data, replace_Name)
+
+
+
+fig <- subplot(hist_1, hist_2, titleY = TRUE, titleX = TRUE, margin = 2) %>% 
+  layout(title = 'Distribution of Casualties and Property Damage')
+fig
+# Update title
+annotations = list( 
+  list( 
+    x = 0.2,  
+    y = 1.0,  
+   
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),  
+  list( 
+    x = 0.8,  
+    y = 1,  
+  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ))
+
+fig <- fig %>%layout(annotations = annotations) 
+return(fig)
+}
+```
+
+
+
+### Count Plot: Number of Casualties by Attack Type and Weapon Type
+
+```{r , message = FALSE, warning = FALSE, results='hide'}
+plot.count.attacktype_by_weapon_by_casualties<- function(local_data, replace_Name)
+{
+  
+
+  ## Transform Data
+  data <- local_data %>%
+    select(weaptype1_txt, targtype1_txt,  ncasualties, nkill) %>%
+    mutate(
+      weaptype1_txt = weaptype1_txt %>% str_replace_all(
+        '\\(not to include vehicle-borne explosives, i.e., car or truck bombs\\)',
+        " "
+      ),
+      weaptype1_txt = weaptype1_txt %>% str_replace_all(
+        'Equipment',
+        " "
+      )
+    ) %>%
+    group_by(weaptype1_txt , targtype1_txt) %>%
+    filter(!is.na(ncasualties)) %>%
+    summarise(
+      count = n(),
+      Lethality  = round((sum(nkill , na.rm = TRUE) / sum(ncasualties, na.rm = TRUE) ) * 100 , 0),
+      ncasualties = sum(ncasualties)
+    ) %>%
+    arrange(desc(count)) %>%
+    slice(1:10)
+
+  ## Specify colours
+  col_1 <- brewer.pal(n = 9, name = "Oranges")[1]
+  col_2 <- brewer.pal(n = 9, name = "Oranges")[7]
+
+  ## Create Plot
+  plot <-
+    ggplot(data, mapping = aes(x = weaptype1_txt, y = targtype1_txt)) +
+    geom_count(mapping = aes(size = ncasualties, color = Lethality)) +
+    ggtitle(paste0(replace_Name, ": Number of Casualties & Percentage Lethality by Weapon Type & Target Type")) +
+    scale_color_continuous(low = "black", high = col_2, name = "Scale:\nNumber of Casualties\nColour:\nPercentage Lethality\n") +
+    scale_size_continuous(range = c(0.1, 8)) +
+    theme(
+      axis.text.x = element_text(angle = 90, hjust = 1),
+      axis.text.y = element_text(angle =  0),
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(), 
+      legend.key.height = unit(1, 'cm'), 
+      legend.title = element_text(size= 8),
+      legend.text = element_text(size = 6, hjust=1, vjust = 1)
+    ) +
+     theme(plot.title=element_text(size=11,hjust = 1 ,  vjust=3)) 
+
+
+  plotly <- ggplotly(plot) %>%
+    layout(autosize = T)
+
+  
+  plotly <-  ggplotly(plot) 
+  
+  return(plotly)
+
+}
+
+```
+
+ 
+### 10 Most Impactful Events
+```{r}
+plot.major_events <- function(local_data, replace_Name)
+{
+  
+
+data <-  local_data %>%
+  select(date, gname,weaptype1_txt  , ncasualties, nkill, summary) %>%
+  arrange(desc(ncasualties )) %>% 
+  slice(1:20)
+
+
+table <- data %>%
+  kbl() %>%
+    kable_paper("hover", "condensed", full_width = T) %>%
+    scroll_box(width = "100%", height = "400px")
+
+return(table)
+}
+
+```
+
+
+
+
+
+# Analysis & Data Exploration
+
+## Overall Questions 
+
+
+The primary questions that I will be examining will be:
+
+1) How is terrorism evolving over time?  
+2) Who are the primary groups, how do they operate, and where do they operate?  
+
+
+To explore these questions the following questions will be explored:  
+  - What is the trend of attacks, weapons and groups over time?    
+  - What groups are the most prolific?   
+  - What are the primary targets of terrorism?   
+  - What are the weapons used in attacks?  
+  - Where in the world sees high levels of terrorism?  
+  - What are the differences between terrorist groups with regards to weapon and attack types?   
+
+
+The exploration will start by looking at the data globally, from here exploration will continue to follow the primary questions from the macro level into specific countries, terrorist organizations, and weapon types.  
+
+
+## What is the General Trend Over Time
+
+
+### Number of Attacks by Year 
+
+The number of attacks seems to have a steady increase over time through with a sharp rise between 2011-14.
+
+As discussed in a previous section, there may be many factors that could be attributed to this increase including increased reporting & globalized society, establishment of START and a heavier focus on capturing information. 
+
+From context we also know that a lot of these attacks can be attributed to the rise of Islamic State of Iraq and the Levant (ISIL).
+
+
+```{r fig.align="center" , fig.cap="Figure: Caption" }
+## create annotations 
+annotation <- annotate("Text", label = "Sharp Increase from 2011 to 2014 \nwith a quick decline afterwards" ,colour = "darkgray", hjust = 0 ,x =2005 , y=15000 , size=3 )
+
+## Call function to do macro study 
+plot <- plot.number_attacks_over_time(gtd_data, replace_Name = "Global" , annotation = annotation) 
+htmltools::div( plot, align="center" );
+
+```
+
+
+
+### Number of people killed & wounded over time
+
+Similar to the increase in the number of attacks there is an steady increase in number of people killed and wounded.   
+
+There are two clear peaks in number of people wounded in attacks in 1995 and again in 2001.   
+
+The spikes can be attributed a collection of a few different major attacks:   
+
+  - 1995: 6,252 people were injured and 77 people were killed in an attack on the Tokyo Subway by members of the Aum Shinrikyo.      
+
+  - 2001: 25,000 people were injured and 2,996 people were killed in the United States during the September 11 attacks.     
+
+  - 2007: Yazidi communities were bombed in northern Iraq with more than 796 people killed and 1,562 people injured.  
+  
+  - 2011-15: Islamic State of Iraq and the Levant (ISIL)  
+
+
+```{r}
+## create annotations 
+annotation <- annotate("Text", 
+                       size=3,  
+                       hjust = 0 ,
+                        colour = "darkgray",
+                       label = c("2001 September 11\n Attacks in United Staes",
+                                 "Rise of ISIL \n2011-15" , 
+                                 "2007 Yazidi \nBombings Iraq",
+                                 "1995 Aum Shinrikyo \nTokyo Subway Attacl" ) ,
+                       x =c(2001 , 2010, 2007 , 1995) , 
+                       y=c(31000, 40000 , 25000, 16500 ) ) 
+           
+
+plot.nkill_nWound_over_time(gtd_data, replace_Name =  "Global", annotation = annotation)
+```
+### Proportion of lethal Attacks to Non-lethal 
+
+It is interesting to note that the majority of terrorist attacks have non-lethal outcomes. 
+
+```{r}
+## Get data for pie chart
+data <- gtd_data %>%
+  select(nkill , nwound) %>%
+  filter(!is.na(nkill) & !is.na(nwound)) %>%
+  summarise(Non_lethal = sum(nkill == 0),
+            lethal =  sum(nkill > 0))
+
+## Gather to transpose the data
+data <- data %>%
+  gather(key, value, Non_lethal, lethal)
+
+
+## Create Pie chart
+plot <- ggplot(data, aes(x = "", y = value, fill = key)) +
+  geom_bar(width = 1, stat = "identity") +
+  geom_text(aes
+            (label = 
+                paste0(
+                  round(value / sum(value) * 100, 1),
+                  "%" ,
+                  ifelse(key == "Non_lethal", "\nNon-lethal" , "\nlethal"),
+                  "\nAttacks"
+                )
+              ),
+            position = position_stack(vjust = 0.5),
+            color = "white")
+
+
+## Control Units and Chart Elements
+plot <- plot + coord_polar("y", start = 0) +
+  theme(axis.text.x = element_blank()) +
+  labs(fill = "Category",
+       title = "Overall Proportion of lethal \nto Non-lethal Attacks")
+
+
+## apply theme with graph and number of colours
+plot <- apply_theme(plot, length(unique(data$key)))
+
+
+## Override theme from function
+plot <- plot +
+  blank_theme +
+  theme(
+      plot.title = element_text(hjust = 0.5),
+    axis.line = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    legend.position = "none"
+  )
+
+## plot graph
+plot
+
+```
+
+### Number of Attacks Succuessful vs Not & By year 
+
+The way in which the data is collected is very important for understating the classification of successful and non-successful attacks. 
+
+  - The data is collected from only acted upon plans and not conspiracy  
+  - If it was acted on and was not successful, it may go unreported 
+  - Counter terrorism organizations do not actively promote foiled attacks
+
+Due to these reasons, this data is skewed however it is interesting to see the proportion of attacks that either fail or are prevented by primarily local police or military after an attack begins to take place. 
+
+
+```{r fig.align="center"}
+
+## Get data
+data <- gtd_data %>%
+  select(iyear, success) %>%
+  filter(!is.na(success)) %>%
+  group_by(success , iyear) %>%
+  count(iyear);
+
+## Create Line Graph
+plot <- data %>%
+  ggplot(aes(x = iyear)) +
+  geom_line(mapping = aes(y = n, colour = success),) +
+  xlab('Year') +
+  ylab('Number of Attacks');
+
+## apply theme with graph and number of colours
+plot <- apply_theme(plot, length(unique(data$success))) +
+    labs(
+         title = "Global: Successful and Unsuccessful Attacks by Year"
+    );
+
+## plot graph
+htmltools::div( ggplotly(plot), align="center" );
+
+
+## Create Stacked chart over time
+plot <- ggplot(data, aes(x = iyear ,  y = n, fill = success)) +
+  geom_bar(width = 1,
+           stat = "identity" ,
+           position = "fill") +
+  xlab('Year') +
+  ylab('Proportion of Successfull to\nUnsucessful Attacks By Year');
+
+## apply theme with graph and number of colours
+plot <- apply_theme(plot, length(unique(data$success))) +
+    labs(
+         title = "Global: Proportion of Successful Attacks by Year \n "
+    ) + annotate("Text", 
+                       size=3,  
+                       hjust = 1 ,
+                       colour = "white",
+                       label = c("Missing Data in 1993" ) ,
+                       x =c(1999) , 
+                       y=c(0.05 ) ) 
+           
+
+
+## plot graph
+htmltools::div( ggplotly(plot), align="center" );
+
+
+```
+
+### Distribution of Casualties & Property Damage Using Log Scale
+
+The log transformation has been used to make the data more readable. 
+Distribution tends towards zero with a significant skew to the right for number of casualties.
+The log of the property damage seems to be relatively normally distributed.  
+
+```{r}
+
+data <- gtd_data %>%
+        select(ncasualties, propvalue) %>%
+        mutate( 
+          ncasualties=  log(replace_na(ncasualties, 0)) ,
+          propvalue = log(replace_na(propvalue, 0))
+        ) 
+
+plot <- data %>%
+  ggplot( ) +
+  geom_histogram(
+       mapping = aes( x = ncasualties  ), bins=20, fill="grey",
+       ) + 
+  geom_density(aes( x = ncasualties  ,y=0.5*..count..), colour="darkorange2", adjust=3) +
+    xlab('Number of Casualties (log Scale)') +
+    ylab('Frequency') +
+    graph_theme+
+  labs(title = "Global: Distribution of Casualties Using Log Scale");
+
+## plot graph 
+htmltools::div( ggplotly(plot), align="center" );  
+
+plot <- data %>%
+  ggplot( ) +
+  geom_histogram(
+       mapping = aes( x = propvalue  ), bins=50, fill="grey",
+       ) + 
+  geom_density(aes( x = propvalue  ,y=0.5*..count..), colour="darkorange2" , adjust=3) +
+    xlab('Property Damage $USD (log Scale)') +
+    ylab('Frequency')+
+    graph_theme +
+  labs(title = "Global: Distribution of Property Damage Using Log Scale")
+
+## plot graph 
+htmltools::div( ggplotly(plot), align="center" );      
+
+
+```
+
+
+
+### Property Damage over Time 
+
+Whist the distribution looks relatively normal using the log transformation above we can see that this seems not to be the case over time. Further investigation will be required to see why 1992 has such a significantly high level of property damage - could this be a miss typed value?
+
+Note: Some figures cannot be obtained in this category, for example, there is not estimation to the value of damage caused by September 11 attacks in 2001. Further to this there is a disproportion in the value of property between region; a shop front in the US would be valued much higher than an entire building in certain regional areas. Therefore, these are heavy biases in this data. 
+
+```{r}
+
+  ## Transform data
+  data <- gtd_data %>%
+    select(iyear , propvalue) %>%
+    group_by(iyear) %>%
+    summarise(propvalue = sum(propvalue, na.rm = TRUE)) %>% 
+   mutate(
+      dispay_value = ifelse(propvalue > 450000000, paste0("$", prettyNum( propvalue ,big.mark=",") ), NA)
+    )
+
+plot <- ggplot(data=data, aes(x= iyear , y=propvalue , fill= "chocolate1" ) )  +
+  geom_bar(stat="identity") +
+    xlab('Year') +
+    ylab('Property Value')
+ 
+
+## apply theme with graph and number of colours
+plot <- apply_theme(plot, 1) +
+  theme(
+    legend.position = 'none'
+  ) +
+    labs(
+      title = paste0( "Global", ": Property Damage by Year"
+                      )
+    );
+
+## get annotation elements
+annotation <-  data %>% 
+  filter(
+    ! is.na(dispay_value)
+  ) %>% 
+  mutate(
+    x = iyear, 
+    y = propvalue + 100000000
+  )
+plot <-  plot + annotate("Text", colour="DarkGrey",  label = annotation$dispay_value ,x =annotation$x , y=annotation$y , size=3 ) +
+   scale_y_continuous(labels = comma);
+
+
+## plot graph
+htmltools::div( ggplotly(plot), align="center" )
+
+```
+
+
+
+
+
+
+
+ 
+
+## Where are the Majority of Attacks Occuring? 
+
+### Number of Attacks by Region 
+ 
+Both the Middle East & North African and South Asian regions have experienced the majority of attacks, more than doubling the third highest location for number of attacks. 
+
+
+```{r }
+data <- gtd_data %>%
+        select(region_txt) %>%
+        filter( ! is.na(region_txt)) %>%      
+        count(region_txt);
+
+## Create plot 
+plot <- ggplot(data=data, aes(x= n , y= reorder(region_txt, n) , fill=reorder(region_txt, n)  )) +
+   geom_text(mapping=aes(
+     label=ifelse( n > 3300, prettyNum(n,big.mark=","), "" ) ),
+     position = position_stack(vjust = 0.5), colour = "White",  size=3) +
+   geom_bar(stat="identity") +
+     xlab('nkills') +
+     ylab('Region');
+   
+## apply theme with graph and number of colours 
+plot <- apply_theme(plot, length(unique(data$region_txt) )) + 
+  theme(
+    legend.position = 'none'
+  )+
+  labs(title = "Global: Number of Attacks by Region");  
+
+
+## plot graph 
+htmltools::div( ggplotly(plot), align="center" );
+```
+
+
+
+### Number of People Killed & Wounded by Region Over Time
+
+The graph below shows the distribution in the number of casualties over time grouped by region. By using the graph tools to isolate and select specific regions to depict, we can see that the Middle East & North Africa, South Asia, and Sub-Saharan Africa have has significant increases in the number of casualties in the last two decades. 
+
+This is in direct comparison to North America which has remained relatively stable and low with exception to the September 11 attacks. In fact, apart from these three regions, everywhere else has either seen a sable number or a reduction in the number of casualties from acts of terrorism. 
+
+```{r,, fig.height=5}
+## Transform data for visualisation
+data <- gtd_data %>%
+   select(iyear , nkill, nwound, region_txt, ncasualties) 
+
+## Filter the data 
+filtered_data <- data %>%
+    group_by(region_txt , iyear) %>%
+    summarise(ncasualties = sum(ncasualties, na.rm = T))
+
+## Visualize the data 
+plot <- ggplot() +
+  geom_point(data = filtered_data, 
+           mapping = aes(x = iyear, y = ncasualties, color= region_txt )
+             );
+
+plot <- apply_theme(plot, length(unique(filtered_data$region_txt)))+
+  labs(title = "Global: Number of Casualties by Region over Time");
+
+## plot graph 
+htmltools::div( ggplotly(plot), align="center" );
+
+
+```
+
+
+### Number of Attacks by Country 
+
+By looking further into this we can which countries have had the majority of attacks occur with Iraq, Afghanistan, and Pakistan at the top. There is a exponential trend evident here with most of the counties number of attacks falling away quickly.
+
+```{r, long_chunk_1 , fig.height=8}
+
+
+data <- gtd_data %>%
+        select(country_txt) %>%
+        filter( ! is.na(country_txt)) %>%
+        count(country_txt) %>%
+        arrange(desc(n)) %>% 
+        slice(1:30)
+
+
+## Visualize the data
+plot <- ggplot(data=data, aes(x= n , y= reorder(country_txt, n) , fill = reorder(country_txt, n) ) ) +
+  geom_bar(stat="identity",  width=0.8, position = position_dodge(width=0.2)) +
+   xlab('Number of Attacks') +
+    ylab('Country') +
+  geom_text(mapping=aes(
+    label = ifelse( n > 2600, prettyNum(n,big.mark=",") , " ") ) ,
+    position = position_stack(vjust = 0.5),
+    colour = "white",
+    size=2)
+
+
+## apply theme with graph and number of colours 
+plot <- apply_theme(plot, length(unique(data$country_txt) )) + 
+        theme(
+          legend.position = "none",
+          ) +
+  labs(title = "Global: Number of Attacks by Country (limit: 30)") 
+
+## plot graph 
+ggplotly(plot)
+
+
+```
+
+
+### Number of Casualties By Country
+
+When we look at the outcomes of these attacks, the stark impact of these events is clear. From 26,755 attacks, there were 208,897 casualties in Iraq. This is almost double Afghanistan at 111,400.
+
+Again, we see a quick fall off in the number of casualties. 
+
+We also see that the United States is now ranked fifth in the number of casualties when it was not in the 30 highest number of attacks highlighting the drastic effect of September 11
+
+
+```{r, long_chunk, fig.height=8}
+
+
+## Transform data 
+data <- gtd_data %>%
+    select(country_txt , ncasualties) %>%
+    group_by(country_txt) %>%
+    summarise(
+      ncasualties= sum(ncasualties, na.rm = TRUE),
+      ) %>%
+    arrange(desc(ncasualties)) %>% 
+        slice(1:30)
+
+
+plot <- ggplot(data=data, aes(x= ncasualties , y= reorder(country_txt, ncasualties), fill = reorder(country_txt, ncasualties)) ) +
+  geom_bar(stat="identity", width=0.8, position = position_dodge(width=0.2)) +
+    geom_text(mapping=aes(
+      label= ifelse(ncasualties > 15000, prettyNum(ncasualties ,big.mark=","), " ")) ,
+      position = position_stack(vjust = 0.5),
+      colour = "white", 
+      size=2) +
+    xlab('Number of Casualties' ) +
+    ylab('Country') +
+  theme(axis.text.y=element_text(size=rel(0.4)));
+
+## apply theme with graph and number of colours 
+plot <- apply_theme(plot, length(unique(data$country_txt) )) +
+  theme(
+          legend.position = "none"
+        )+
+  labs(title = "Global: Total Casualties by Country over Time (limited: 30)"); 
+
+## plot graph 
+ggplotly(plot)
+
+
+```
+## Property damage by region 
+
+This variable does have a lot of missing data and biases as highlighted earlier and as such it may not be the most reliable value to interrogate. 
+
+As seen below although the majority of attacks occurred in the Middles East, Northern Africa and South Asia this is not show to be the regions with the most property damage. This could be due to the value of the elements destroyed in attacks having greater value in these regions however it is more likely that the data in Western Europe, North and South America is more reported and available. 
+
+Further exploration will be required to answer these questions. 
+
+```{r}
+
+data <- gtd_data %>%
+        select(propvalue,  region_txt ) %>%
+        mutate( propvalue= replace_na(propvalue, 0) ) %>%
+        group_by(region_txt ) %>%
+        summarise(propvalue = sum(propvalue)) 
+
+#Create plot 
+plot <- ggplot(data=data, aes(x= propvalue , y= reorder(region_txt, propvalue) , fill=reorder(region_txt, propvalue)  )) +
+   geom_text(mapping=aes(
+     label= ifelse( propvalue > 1000000000, paste0("$", prettyNum(propvalue,big.mark=",") ) , " " )  ) , 
+             position = position_stack(vjust = 0.5), colour = "White",  size=3) +
+   geom_bar(stat="identity") +
+     xlab('Property Value ($USD)') +
+     ylab('Regoin') +
+   scale_x_continuous(labels = comma);
+   
+## apply theme with graph and number of colours 
+plot <- apply_theme(plot, length(unique(data$region_txt) )) + 
+  theme(
+    legend.position = 'none'
+  ) +
+  labs(
+    title =  "Global: Property Damage by Region"
+  );   
+
+## plot graph 
+htmltools::div( ggplotly(plot), align="center" );
+
+
+```
+
+
+
+### Property Damage and Number of Deaths by Attacks in Region
+
+There is a slight trend in property damage by number of deaths by no major distinction between groups. 
+
+```{r , test_4,fig.height=8}
+
+## Transform the data
+data <- gtd_data %>%
+  select(nkill , propvalue, region_txt) %>%
+  filter(!is.na(nkill) & !is.na(propvalue)) %>%
+  filter(nkill > 0 &  propvalue  > 0) %>%
+  mutate(nkill = log(nkill) , propvalue = log(propvalue))
+
+
+## Visualize the data
+plot <- ggplot(data = data, aes(x = propvalue, y = nkill, color = "chocolate1")) +
+  geom_point() +
+  geom_jitter(alpha = 0.2, width = 0.2, height = 0.2 )+
+  facet_wrap(~region_txt, ncol = 2)
+
+
+
+plot <- apply_theme(plot, length(unique(data$region_txt))) +
+        scale_color_manual(values = "chocolate1") +
+  theme(
+      legend.position = 'none'
+  ) +
+  labs(title = "Property Damage and Number of Deaths by Attacks in Region")
+
+
+## Plot scatter graph
+plot
+
+```
+
+
+
+### Spatial Data For Exploration 
+
+Using the map to explore where terrorist attacks have occurred and interactively explore that data relating to them is very valuable to understanding the global trends in terrorism and the sheer volume of attacks. 
+
+The map further puts into perspective that these are not just data points but people, communities and cities. 
+
+```{r out.width="100%"}
+
+## Transform Data - use slice to create smaller maps 
+summarised_Data <- gtd_data %>%
+    select( eventid , country_txt, targtype1_txt , longitude , latitude , gname,attacktype1_txt,  nkill, nwound, iyear, imonth, iday , summary) %>%
+    filter(longitude != is.na(longitude) & latitude != is.na(latitude) ) %>%
+    mutate(
+      date = paste0(  iday,"/", imonth, "/", iyear ) , 
+      nkill= replace_na(nkill, 0) ,
+      nwound= replace_na(nwound, 0) , 
+      summary = ifelse( summary == "", "No Summary Provided", summary)
+      
+    )  
+ 
+
+summarised_Data <- summarised_Data %>%
+  mutate(popup = paste0("<b> Event Id:",summarised_Data$eventid, "</b>",
+                       "<br>Country: ",summarised_Data$country_txt,
+                       "<br>Date: ",summarised_Data$date,
+                       "<br>",
+                       "<br><b>Event Information:</b> ", 
+                       "<br>Group Name: ",summarised_Data$gname,
+                       "<br>Target: ",summarised_Data$targtype1_txt,
+                       "<br>Attack Type: ",summarised_Data$targtype1_txt,
+                       "<br>People Killed: ",summarised_Data$nkill,
+                       "<br>People Wounded: ",summarised_Data$nwound,
+                       "<br><br><b>Summary: </b><br>",summarised_Data$summary
+                       ),
+         Hover = paste0("Date: ",summarised_Data$date,
+                        ".       ",
+                       "Target: ", summarised_Data$targtype1_txt , 
+                       ".       (Click for more infromation)")
+  );
+
+#set up base map
+map <- leaflet::leaflet() %>%
+   addProviderTiles(providers$CartoDB.Positron) %>%
+    addProviderTiles(providers$CartoDB.Positron, group="Light") %>%
+    addProviderTiles(providers$CartoDB.DarkMatter, group="Dark") %>%
+   addProviderTiles(providers$OpenStreetMap, group = "OSM") %>%
+    addLayersControl(baseGroups=c('Light', 'Dark', 'OSM')) %>%
+    addMiniMap(
+      tiles = providers$CartoDB.Positron,
+      minimized = FALSE,
+      toggleDisplay = TRUE);
+
+
+#Plot the mapping elements 
+map_groups <- map %>% 
+  leaflet::addCircleMarkers( 
+    data = summarised_Data, 
+    popup = summarised_Data$popup,
+    label = summarised_Data$Hover,
+    
+    clusterOptions = markerClusterOptions()
+    
+  );
+    
+#Show map
+map_groups 
+
+
+```
+<center>
+*(Zoom in and click on event to see further information)*
+
+</center>
+
+ 
+
+## What are the Main Attack Types?
+
+### Number of Attacks by Attack Type
+
+The primary attack type by almost double is explosives with 95,000 attacks followed by armed assault with 47,419 attacks. 
+
+```{r}
+
+## Transform the data 
+data <- gtd_data %>%
+        select(attacktype1_txt) %>%
+        filter( ! is.na(attacktype1_txt)) %>%
+        count(attacktype1_txt) %>%
+        arrange(desc(n)) 
+
+## Visualize the data 
+plot <- ggplot(data=data, aes(x= n , y= reorder(attacktype1_txt, n) , fill = reorder(attacktype1_txt, n) ) ) +
+  geom_bar(stat="identity",  width=0.8, position = position_dodge(width=0.2)) +
+  geom_text(mapping=aes(
+    label= ifelse(n > 9000,  prettyNum(n,big.mark=",") , "" )) ,
+    position = position_stack(vjust = 0.5), colour = "white",  size=2) +
+    xlab('Number of Attacks') +
+    ylab('Atack Type');
+
+colourCount = length(unique(data$attacktype1_txt) );
+
+## apply theme with graph and number of colours 
+plot <- apply_theme(plot, length(unique(data$attacktype1_txt) )) + 
+      scale_color_manual(values = getPalette(colourCount)) +
+      scale_fill_manual(values = getPalette(colourCount))+
+        theme(
+          legend.position = "none",
+          )+
+  labs(title = "Global: Number of Attacks by Attack Type")
+
+## plot graph 
+htmltools::div( ggplotly(plot), align="center" );
+
+```
+
+
+### Number of Casualties by Attack Type
+
+In this graph we can see that explosives and armed assaults have a significant casualty rate in there attacks.
+
+```{r}
+
+data <- gtd_data %>%
+        select(ncasualties,  attacktype1_txt ) %>%
+        mutate( ncasualties= replace_na(ncasualties, 0) ) %>%
+        group_by(attacktype1_txt ) %>%
+        summarise(ncasualties = sum(ncasualties)) 
+
+#Create plot 
+plot <- ggplot(data=data, aes(x= ncasualties , y= reorder(attacktype1_txt, ncasualties) , fill=reorder(attacktype1_txt, ncasualties)  )) +
+   geom_text(mapping=aes(
+     label=ifelse( ncasualties > 40000, prettyNum(ncasualties,big.mark=",") , "" ))
+     , 
+     position = position_stack(vjust = 0.5), colour = "White",  size=3) +
+   geom_bar(stat="identity") +
+     xlab('Number of Casualties') +
+     ylab('Atack Type')+
+   scale_x_continuous(labels = comma);
+   
+colourCount = length(unique(data$attacktype1_txt) );
+
+## apply theme with graph and number of colours 
+plot <- apply_theme(plot, length(unique(data$attacktype1_txt) )) + 
+      scale_color_manual(values = getPalette(colourCount)) +
+      scale_fill_manual(values = getPalette(colourCount))+
+        theme(
+          legend.position = "none",
+          )+
+  labs(title = "Global: Number of Casualties by Attack Type")
+
+## plot graph 
+htmltools::div( ggplotly(plot), align="center" );
+
+```
+
+### Number of Casualties by Attack Type over Time 
+
+The trend here shows how the attacks are employed over time. There is a clear evidence in the line graph and the stacked bar chart that there is an increase the proportion of casualties for explosives attacks between in the early 2000's.
+```{r}
+## Transform Data
+data <- gtd_data %>%
+        select(ncasualties, nwound, attacktype1_txt , iyear) %>%
+        mutate( ncasualties= replace_na(ncasualties, 0) ,nwound= replace_na(nwound, 0)) %>%
+        group_by(attacktype1_txt ,iyear) %>%
+        summarise(ncasualties = sum(ncasualties), nwound = sum(nwound)) 
+
+
+plot <- data %>%
+  ggplot( aes(x = iyear) ) +
+  geom_line(
+       mapping = aes( y = ncasualties, colour = attacktype1_txt ),
+       ) + 
+    xlab('Year') +
+    ylab('Number of Casualties');
+
+
+
+## apply theme with graph and number of colours 
+local_palette <- colorRampPalette(brewer.pal(9, "Oranges"));
+
+## apply theme with graph and number of colours 
+plot <- apply_theme(plot, length(unique(data$attacktype1_txt) )) +
+      scale_color_manual(values = rev(local_palette(length(unique(data$attacktype1_txt))))) +
+      scale_fill_manual(values = rev(local_palette(length(unique(data$attacktype1_txt))))) +
+  theme(
+
+  ) +
+  labs(title = 'Global: Number of Casualties by Attack Type over Time' );   
+
+## plot graph 
+htmltools::div( ggplotly(plot), align="center" ); 
+
+
+#### Create Stacked chart over time
+plot <- ggplot(data, aes(x=iyear ,  y= ncasualties, fill=reorder(attacktype1_txt, ncasualties) ) )+
+  geom_bar(width = 1, stat = "identity" , position = "fill") +
+    xlab('Year') +
+    ylab('Proportion of Casualties');
+
+## apply theme with graph and number of colours 
+plot <- apply_theme(plot, length(unique(data$attacktype1_txt))) +
+  labs(title = "Global: Proportion of Casualties by Attack Type over Time", fill = "Attack Type");
+
+htmltools::div( ggplotly(plot), align="center" )
+  
+
+```
+
+##  Attack type by Property Damage and Number of Deaths (log Scale)
+
+
+```{r , test_3 , fig.height=8}
+library(ggExtra)
+
+
+## Filter the data
+data <- gtd_data %>%
+  select(nkill , propvalue, attacktype1_txt) %>%
+  filter(!is.na(nkill) & !is.na(propvalue)) %>%
+  filter(nkill > 0 &  propvalue  > 0) %>%
+  mutate(nkill = log(nkill) , propvalue = log(propvalue))
+
+
+## Visualize the data
+plot <- ggplot(data = data, aes(x = propvalue, y = nkill, color = "darkorange2")) +
+  geom_point() +
+  geom_jitter(alpha = 0.2, width = 0.2, height = 0.2 )+
+  facet_wrap(~attacktype1_txt, ncol = 2)
+
+
+
+
+plot <- apply_theme(plot, length(unique(data$attacktype1_txt))) +
+        scale_color_manual(values = "chocolate1") +
+  theme(
+      legend.position = 'none'
+  ) +
+ labs(title = "Global: Property Damage and Number of Deaths (log Scale) by Attack type")
+
+
+## Plot scatter graph
+plot
+
+
+```
+
+
+### Attack Type by Region and Attack Type Scaled by Number of Attacks 
+
+The tree map shows that in the majority of locations explosives and armed assaults are the most common attack type. 
+
+```{r}
+
+## Transform data
+data <- gtd_data %>%
+        select(region_txt, attacktype1_txt, weaptype1_txt) %>%
+        filter( ! is.na(region_txt) , ! is.na(attacktype1_txt) , ! is.na(weaptype1_txt)  ) %>%
+        group_by(region_txt, attacktype1_txt )%>%
+         summarise(nAttack=  n())
+
+
+plot <- ggplot(data, aes(area = nAttack,
+                 label =   paste0(attacktype1_txt, "\n" ,prettyNum(nAttack,big.mark=","), " Attacks" ),
+                 subgroup = region_txt, 
+                 fill = attacktype1_txt)) + 
+  geom_treemap() +
+    geom_treemap_text(colour = "black", fontface = "italic", 
+                    size = 7) +
+  geom_treemap_subgroup_border(colour = "White", size = 5) +
+  geom_treemap_subgroup_text(place = "bottom", grow = TRUE,
+                             alpha = 0.75, colour = "White",
+                             ) 
+
+## apply theme with graph and number of colours 
+plot <-   apply_theme(plot, length(unique(data$attacktype1_txt) ))+
+  labs(fill = "Attack Type",
+    title =  "Global: Attacks by Region, Attack Type,\n Scaled by Number of Attacks"
+  );  
+
+## plot graph 
+plot
+
+```
+
+
+### Number of Perpetrators
+
+The number tends to involve less people however there are many attacks carried out by large groups with serious consequences. Further investigation into the groups and sizes is required to better understand these group attacks. 
+
+```{r}
+## Transform data
+data <-  gtd_data %>%
+  select(nperps) %>%
+  filter( ! is.na(nperps)) %>% 
+  mutate(nperps = log(nperps)) %>% 
+  arrange(desc(nperps))
+
+plot <- data %>%
+  ggplot( ) +
+  geom_histogram(
+       mapping = aes( x = nperps  ), bins=20, fill="grey",
+       ) + 
+  geom_density(aes( x = nperps  ,y=0.5*..count..), colour="darkorange2", adjust=3) +
+    xlab('Number of Perpetrators (log scale))') +
+    ylab('Frequency') +
+    graph_theme+
+  labs(
+    title =  "Global: Distribution of Number of Perpetrators (log scale)"
+  ); 
+
+
+## plot graph
+htmltools::div( ggplotly(plot), align="center" )
+
+```
+
+### Proportion of Suicided attack 
+
+The vast majority of attacks are not suicidal attacks, however, 3.6% of all attacks is not an insignificant number of attacks. Exploring these as a sub group could result in some interesting findings. 
+
+```{r}
+## Get data for pie chart
+data <- gtd_data %>%
+  select(suicide) %>%
+  filter(!is.na(suicide)) %>%
+  group_by(suicide) %>%
+  count(suicide);
+
+
+## Create Pie chart
+plot <- ggplot(data, aes(x = "", y = n, fill = suicide)) +
+  geom_bar(width = 1, stat = "identity") +
+  geom_text(
+    aes
+    (label = paste0(
+      round(n / sum(n) * 100, 1), "%" , 
+      ifelse(suicide == 1, "\nSuicidal" , "\nNot Suicidal"),
+      "\nAttacks"
+      )
+    ),
+  position = position_stack(vjust = 0.5),
+  color = "white");
+
+## Control Units and Chart Elements 
+plot <- plot + coord_polar("y", start = 0) +
+  theme(axis.text.x = element_blank()) +
+  labs(fill = "Category",
+       title = "Overall Proportion of Suicidal\n to Non-Suicidal");
+
+## apply theme with graph and number of colours
+plot <- apply_theme(plot, length(unique(data$suicide)))
+
+
+## Override theme from function
+plot <- plot +
+  blank_theme +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.line = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    legend.position = "none"
+  );
+
+
+## plot graph
+plot
+```
+
+
+
+
+
+
+ 
+
+## What is the Primary Weapons Used in Attacks?
+When looking at the weapons used we can see that the primary attack type was bombing and explosives and this is evident therefore in the weapons used. 
+
+### What Single Event had the Highest Number of Casualties 
+By looking at the most prolific events we have a better understanding as to what weapon typologies cause the most amount of damage and casualties. 
+
+```{r}
+
+data <-  gtd_data %>%
+  select(date, gname,weaptype1_txt  , ncasualties, nkill, summary) %>%
+  arrange(desc(ncasualties )) %>% 
+  slice(1:20)
+
+
+data %>%
+  kbl() %>%
+    kable_paper("hover", "condensed", full_width = T) %>%
+    scroll_box(width = "100%", height = "400px")
+
+
+```
+
+
+
+### Number of Casualties by Weapons Type
+
+Here we can see the number of casualties by weapon type is dominated by explosives which accounts for more than double the next categorry of firearms. 
+
+```{r}
+
+data <- gtd_data %>%
+        select(ncasualties,  weaptype1_txt ) %>%
+        mutate( ncasualties= replace_na(ncasualties, 0) ) %>%
+        mutate(
+          weaptype1_txt = weaptype1_txt %>% str_replace_all(  '\\(not to include vehicle-borne explosives, i.e., car or truck bombs\\)', " ")
+          ) %>%
+        group_by(weaptype1_txt ) %>%
+        summarise(ncasualties = sum(ncasualties)) 
+
+#Create plot 
+plot <- ggplot(data=data, aes(x= ncasualties , y= reorder(weaptype1_txt, ncasualties) , fill=reorder(weaptype1_txt, ncasualties)  )) +
+   geom_text(mapping=aes(
+     label= ifelse(ncasualties > 64000, prettyNum(ncasualties,big.mark=",") , " ")) ,
+     position = position_stack(vjust = 0.5), colour = "White",  size=3) +
+   geom_bar(stat="identity") +
+     xlab('nkills') +
+     ylab('Regoin')+
+   scale_x_continuous(labels = comma);
+   
+## apply theme with graph and number of colours 
+plot <- apply_theme(plot, length(unique(data$weaptype1_txt) )) + 
+  theme(
+    legend.position = 'none'
+  ) +
+  labs(
+    title =  "Global: Number of Casualties by Weapons Type"
+  );   
+
+## plot graph 
+htmltools::div( ggplotly(plot), align="center" );
+
+```
+
+### Number of casualties by Weapons Type over Time 
+
+Here we see a similar trend to attack type, this would be expected. 
+
+```{r}
+## Transform Data
+data <- gtd_data %>%
+        select(ncasualties, nwound, weaptype1_txt , iyear) %>%
+        mutate( ncasualties= replace_na(ncasualties, 0) ,nwound= replace_na(nwound, 0)) %>%
+        mutate(
+          weaptype1_txt = weaptype1_txt %>% str_replace_all(  '\\(not to include vehicle-borne explosives, i.e., car or truck bombs\\)', " ")
+          ) %>%
+        group_by(weaptype1_txt ,iyear) %>%
+        summarise(ncasualties = sum(ncasualties), nwound = sum(nwound)) 
+
+
+plot <- data %>%
+  ggplot( aes(x = iyear) ) +
+  geom_line(
+       mapping = aes( y = ncasualties, colour = weaptype1_txt ),
+       ) + 
+    xlab('Year') +
+    ylab('Number of Attacks');
+
+
+
+## apply theme with graph and number of colours 
+local_palette <- colorRampPalette(brewer.pal(9, "Oranges"));
+
+## apply theme with graph and number of colours 
+plot <- apply_theme(plot, length(unique(data$weaptype1_txt) )) +
+      scale_color_manual(values = local_palette(length(unique(data$weaptype1_txt)))) +
+      scale_fill_manual(values = local_palette(length(unique(data$weaptype1_txt)))) +
+      labs(y ='Numper of Casualties' ,
+       x ='Year',
+       title = 'Global: Number of Casualties by Weapon Type over Time' ,
+       fill = "Weapon Type");   
+
+## plot graph 
+htmltools::div( ggplotly(plot), align="center" );  
+
+
+#### Create Stacked chart over time
+plot <- ggplot(data, aes(x=iyear ,  y= ncasualties, fill=reorder(weaptype1_txt, ncasualties) ) )+
+  geom_bar(width = 1, stat = "identity" , position = "fill") +
+    xlab('Year') +
+    ylab('Proportion of Casualties');
+
+## apply theme with graph and number of colours 
+plot <- apply_theme(plot, length(unique(data$weaptype1_txt)))  +
+  labs(title = 'Global: Proportion of Casualties by Weapon Type over Time' ,
+       fill = "Weapon Type");
+
+htmltools::div( ggplotly(plot), align="center" );
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+## Who Are the Most Prolific Groups 
+
+
+### Which groups are responsible for the most Casualties 
+
+Further exploration into these groups will occur later in the report. 
+
+```{r}
+plot.groups_by_casualties (gtd_data , "Global" , 14400 ); #add filter
+```
+
+### Time Span of Groups by Number of Casualties 
+
+In this graph the goal was to see if the age or maturity of a group had an effect on the average number of casualties by group. The age of the group is measured between the first and last recorded attacks and only where they did not commit only one attack. 
+
+There does seem to be a slight trend here and something that is worth further exploration. 
+
+```{r}
+## Filter the data
+data <- gtd_data %>%
+  select(gname , date, ncasualties) %>%
+  filter( ! is.na(gname) & ! is.na(date) & ! is.na(ncasualties) & gname != "Unknown" ) %>%
+  group_by(gname) %>%  
+  mutate(
+    max = max(date, na.rm = T),
+    min =min(date, na.rm = T), 
+  ) %>% 
+  summarise(
+     max = unique(max),
+      min =unique(min),
+     ncasualties = sum(ncasualties)
+  ) %>% 
+  filter( max != min) %>% 
+    group_by(gname) %>%  
+  summarise(
+     ncasualties = mean(ncasualties), 
+     timespan =  max - min 
+  ) %>% 
+  rename(
+    mean_casualties = ncasualties
+  ) %>% 
+  arrange(desc(mean_casualties))
+
+
+
+## Visualize the data
+plot <- ggplot(data = data, aes(x = timespan, y = log(mean_casualties), color = "DarkOrange2")) +
+  geom_point() +
+  geom_jitter(alpha = 0.2, width = 0.5, height = 0.5 )  +
+  labs(
+    title = "Average Number of Casualties by Age of Group (log scale)"
+  ) + 
+  graph_theme +
+  theme(
+    legend.position = 'none'
+  )
+
+htmltools::div( ggplotly(plot), align="center" )
+
+```
+
+
+### Time Span of Groups 
+
+This is an exploration in the time in which groups have been active. In this graph, the data has filtered out any groups that have only committed one attack or the dates of other attacks are not known. 
+
+```{r}
+## Filter the data
+data <- gtd_data %>%
+  select(gname , date, ncasualties) %>%
+  filter( ! is.na(gname) & ! is.na(date) & ! is.na(ncasualties) & gname != "Unknown" ) %>%
+  group_by(gname) %>%  
+  mutate(
+    max = max(date, na.rm = T),
+    min =min(date, na.rm = T), 
+   
+    #span = diff(max - min)  ## need to handle if there is only one attack 
+  ) %>% 
+  summarise(
+     max = unique(max),
+      min =unique(min),
+     ncasualties = sum(ncasualties)
+  ) %>% 
+  filter( max != min) %>% 
+    group_by(gname) %>%  
+  summarise(
+     ncasualties = ncasualties, 
+     timespan =  max - min 
+  ) %>% 
+  arrange(desc(ncasualties))
+
+
+
+
+  plot <- data %>%
+    ggplot() +
+    geom_histogram(mapping = aes(x = as.numeric (timespan)),
+                   bins = 20,
+                   fill = "grey",) +
+    geom_density(aes(x =  as.numeric (timespan)  , y = 1000 * ..count..),
+                 colour = "darkorange2",
+                 adjust = 3) +
+    xlab('Time Between First and Last Attack by Group') +
+    ylab('Frequency') +
+    graph_theme +
+  labs(title = "Distribution of Time Between First & Last Attack by Group")
+  
+  
+  
+htmltools::div( ggplotly(plot), align="center" )
+```
+
+
+### Percentage Lethallity By Number of Attacks
+
+This scatter plot shows the percentage lethality of a group by the number of attacks. Here we can see the groups that have been consistently causing the lost of life. 
+
+```{r}
+data <-  gtd_data %>% 
+  select(gname, ncasualties, nkill) %>% 
+  filter( gname != "Unknown" & ! is.na(gname) & ! is.na(nkill) & ! is.na(ncasualties)) %>% 
+  group_by(gname) %>% 
+  summarise(
+    lethal = sum(nkill > 0),
+    non_lethal = sum(nkill == 0),
+     count = n(),
+      ncasualties = sum(ncasualties), 
+     nkill = sum(nkill),
+     percent =  round((lethal / count )*100 , 0),
+  ) %>% 
+  filter(count >30) %>% 
+  arrange(desc(ncasualties)) %>% 
+  arrange(desc(percent))
+
+
+## Visualize the data
+plot <- ggplot(data = data, aes(x = count, y = percent, color = "DarkOrange2", label = gname)) +
+  geom_point() +
+  geom_jitter(alpha = 0.2, width = 0.5, height = 0.5 ) +
+  labs(title = "Percentage Lethality of Groups by Number of Attacks") + 
+  graph_theme +
+  theme(
+    legend.position = 'none', 
+  )
+
+
+## get annotation elements
+annotation <-  data %>% 
+  filter(
+    count > 2500
+  ) %>% 
+  mutate(
+    dispay_value = paste0(gname, "\n", count, " Attacks\n" ,  percent, "% Lethality"),
+    x = count , 
+    y = percent + 8
+  )
+
+plot <-  plot + annotate("Text", colour="DarkGrey",  label = annotation$dispay_value ,  x =annotation$x , y=annotation$y , size=2 ) 
+
+
+
+
+## Plot scatter graph
+htmltools::div( ggplotly(plot), align="center" )
+
+```
+
+## Target Type
+
+### What doTterrorist Organisations Primarily Target 
+
+There are five primary groups that terrorist organisations are targeting, private citizens & property, military, police, government, and businesses. The attack targets of a group give a good indication as to what the goal of the organisation is.This is something that will be further explored through contextual information and data analysis. 
+
+```{r}
+
+## Transform the data 
+data <- gtd_data %>%
+        select(targtype1_txt) %>%
+        filter( ! is.na(targtype1_txt)) %>%
+        count(targtype1_txt) %>%
+        arrange(desc(n)) 
+
+## Visualize the data 
+plot <- ggplot(data=data, aes(x= n , y= reorder(targtype1_txt, n) , fill = reorder(targtype1_txt, n) ) ) +
+  geom_bar(stat="identity",  width=0.8, position = position_dodge(width=0.2)) +
+  geom_text(mapping=aes(
+    label= ifelse( n > 3000, prettyNum(n,big.mark=",") , " " )  ) , 
+    position = position_stack(vjust = 0.5), colour = "white",  size=2) +
+    xlab('Number of Attacks') +
+    ylab('Target Type');
+
+colourCount = length(unique(data$targtype1_txt) );
+
+## apply theme with graph and number of colours 
+plot <- apply_theme(plot, length(unique(data$targtype1_txt) )) + 
+      scale_color_manual(values = getPalette(colourCount)) +
+      scale_fill_manual(values = getPalette(colourCount))+
+        theme(
+          legend.position = "none",
+          )+
+  labs(title = "Global: Number of Attacks by Attack Target")
+
+## plot graph 
+htmltools::div( ggplotly(plot), align="center" );
+
+```
+
+
+### Target Type by Weapon, Number of Casualties, & Percentage Lethality
+
+This graph shows what the majority of attacks target, the number of casualties, and the percentage lethality of these attacks.
+
+```{r , out.width="100%"} 
+
+plot.count.attacktype_by_weapon_by_casualties(gtd_data, "Global")
+
+```
+
+
+
+ 
+
+# Further Exploration
+
+This section takes a closer look into specific regions and groups and produces the macro level exploration to see if further insights about terrorism can be obtained. From here the goal is to identify key questions and patterns that can be explored further in greater detail.  
+
+
+
+### USA
+
+First, we look at the United States. 
+
+The reason behind this is that we hear a lot in Australian and global media about their “Global War on Terror” in response to the September 11 attacks. 
+
+**Trend Over Time:**    
+There has been a decline from 1970 when the start of the date begins however such a sharp decline from 1970 – 1972 seems out of place. Further investigation into this is required.   
+
+The number of casualties has the sharp spike from the September 11 attacks however there are spike in number of casualties in the years 1984, 1995, 2013, and 2017. These can be seen in the major events table.   
+
+**Weapon Types: **  
+
+ Vehicle are the primary attack type due to the September 11 attacks, however if we remove the 21,000 casualties from this event the number of casualties is now comparable to firearms attacks. 
+ 
+**Primary Groups:**
+
+Al-Qaida has had significantly more casualties than any other group, more than  13 times that of the second most significant group which is generalized as anti-government extremists. 
+
+However, if we change the unit of measure to be number of attacks, we see Al-Qaida is removed from view and the second largest number of attacks is committed by anti-abortion extremists followed by left-wind militants. 
+
+
+
+```{r, warning=FALSE, message=FALSE, out.width="100%"}
+
+## Filter the data
+data <- gtd_data %>%
+  filter(country_txt == "United States")
+
+## Variable for String Formatting 
+replace_Name = "United States"
+
+## Annotations 
+annotation_nkill_wound <- annotate("Text", 
+                       size=3,  
+                       hjust = 0 ,
+                        colour = "darkgray",
+                       label = c("2001 September 11\n Attacks in United Staes" ) ,
+                       x =c(1993 ) , 
+                       y=c(21000) ) 
+
+
+## Create Plots //annoying that this does not work from a function so these are manually called so the doc and be knitted - otherwise works in R Studio
+#create_graphs(data , replace_Name = replace_Name, is_group = FALSE)
+
+is_group <- F;
+
+
+## Graphing Functions
+plot.major_events(data)
+
+plot.map(data)
+
+plot.number_attacks_over_time(data , replace_Name)
+
+plot.nkill_nWound_over_time(data , replace_Name, annotation_nkill_wound)
+
+plot.Weaponstype (data , replace_Name , 1500)
+
+plot.Weapons_over_time(data , replace_Name)
+
+if (is_group)
+{
+  plot.treemap.target_attackt_weap_n(data, replace_Name)
+  
+} 
+## Using else statement, like a function, only displays one plot in HTML - this is very annoying
+if (! is_group)
+{
+  plot.groups_by_casualties(data , replace_Name, 1800)
+}
+if (! is_group)
+{
+  plot.treemap.groupname_attackt_weap_n (data, replace_Name)
+}
+plot.proportion_attacktype_over_time(data, replace_Name)
+
+plot.count.attacktype_by_weapon_by_casualties(data, replace_Name)
+
+
+
+```
+
+
+
+ 
+
+### Iraq
+
+As we have seen in the primary exploration, the number attacks and impact of terrorism in is Iraq is immense. To better understand what is happening in this region is has been subset and the primary questions are explored for specifically Iraq   
+
+**Trend Over Time:**    
+
+The attacks have drastically increased between 2002, reaching its peak in 2014 before falling away rapidly. This rapid instability and violent response the Iraq War where the Unites States led coalition moved to remove Saddam Hussein from government. The war was ended in 2011 where we can see a drop off in the number of casualties however it is suggested that this occupation caused the instability in the region which led to the War in Iraq. 
+
+The War in Iraq war was between the elected government and its allies and primarily Islamic State of Iraq and the Levant (ISIL) and scaled to a full-scale war. Technically acts of war are not captured by the GTD however the nature of ISIL’s attacks may be considered as terrorist acts, further investigation may be required to confirm this and if data is missing or over-represented. 
+
+**Weapon Types: **  
+
+Primary weapons used in these attacks are explosives at a rate of 11 times the second category, firearms. 
+
+**Primary Groups:**
+
+ISIL are responsible for the majority of attack. We can see that there is also another group Islamic State of Iraq (ISI) that people may attribute to be the same, however, this is not the case and as such are not to be considered as joined. 
+When looking at the tree map we can see that the majority of attacks are attributed to unknown, this is interesting that the vast majority of explosives attacks cannot be attributed to a specific group. Further investigation into this group is required. 
+
+
+
+```{r,  warning=FALSE, message=FALSE, out.width="100%"}
+
+## Filter the data
+data <- gtd_data %>%
+  filter(country_txt == "Iraq") %>% 
+  mutate(
+    # reformat text for graph output 
+    gname = ifelse(gname == "Islamic State of Iraq and the Levant (ISIL)", "Islamic State of Iraq &\n the Levant (ISIL)", gname)
+  )
+
+## Variable for String Formatting 
+replace_Name = "Iraq"
+is_group <- F;
+
+
+## Graphing Functions
+plot.major_events(data)
+
+plot.map(data)
+
+plot.number_attacks_over_time(data , replace_Name)
+
+plot.nkill_nWound_over_time(data , replace_Name)
+
+plot.Weaponstype (data , replace_Name , 15000)
+
+plot.Weapons_over_time(data , replace_Name)
+
+if (is_group)
+{
+  plot.treemap.target_attackt_weap_n(data, replace_Name)
+  
+} 
+## Using else statement, like a function, only displays one plot in HTML - this is very annoying
+if (! is_group)
+{
+  plot.groups_by_casualties(data , replace_Name, 6000)
+}
+if (! is_group)
+{
+  plot.treemap.groupname_attackt_weap_n (data, replace_Name)
+}
+
+plot.proportion_attacktype_over_time(data, replace_Name)
+
+plot.count.attacktype_by_weapon_by_casualties(data, replace_Name)
+
+
+```
+
+
+### Islamic State of Iraq and the Levant (ISIL)
+
+As a follow on from exploring the data in Iraq, exploration of the group ISIL is needed to better understand why this group was so prolific in the media around the world. 
+
+**Trend Over Time:**    
+
+What is most shocking about this group is the rapid nature of there violent. This group spans six years (in the data set) and yet they are the second most prolific groups for number of casualties (see “Who are the most prolific group” section). 
+
+**Weapon Types: **  
+
+Primary weapons used in these attacks are explosives however their use of chemical weapons in their 2016 attack shows how horrific some of the actions of this group have been (although no group explicitly claimed this attack sources have attributed it to ISIL).
+
+**Target Type:**
+
+We can also see that their primary target type is private citizens and property followed by military and police. The focus of these attack on innocent people makes this group so horrific. By the primary target types of this group one could assume that this organization's primary goal is to instill fear into the general population and leverage this fear for political and ideological gain.
+
+
+```{r warning=FALSE, message=FALSE, out.width="100%"}
+
+## Filter the data
+data <- gtd_data %>%
+  filter(gname == "Islamic State of Iraq and the Levant (ISIL)")
+
+## Variable for String Formatting 
+replace_Name = "ISIL"
+is_group <- TRUE;
+
+## Graphing Functions
+plot.major_events(data)
+
+plot.map(data)
+
+plot.number_attacks_over_time(data , replace_Name)
+
+plot.nkill_nWound_over_time(data , replace_Name)
+
+plot.Weaponstype (data , replace_Name , 5000)
+
+plot.Weapons_over_time(data , replace_Name)
+
+if (is_group)
+{
+  plot.treemap.target_attackt_weap_n(data, replace_Name)
+  
+} 
+## Using else statement, like a function, only displays one plot in HTML - this is very annoying
+if (! is_group)
+{
+  plot.groups_by_casualties(data , replace_Name)
+}
+if (! is_group)
+{
+  plot.treemap.groupname_attackt_weap_n (data, replace_Name)
+}
+plot.proportion_attacktype_over_time(data, replace_Name)
+
+plot.count.attacktype_by_weapon_by_casualties(data, replace_Name)
+
+```
+
+
+
+
+ 
+
+### Afghanistan
+
+There has been a lot in the news recently about the end of the two-decade long War in Afghanistan which has recently ended in 2021 with the withdrawal of Unite States and affiliated (NATO) forces. The war starting in 2001 as US forces invaded the country to remove Taliban rule from the Islamic state to deny refuge of al-Qaeda post September 11 attacks. 
+
+**Trend Over Time:**   
+
+As seen in the graphs, this invasion led to a steady increase in what is classes as terrorist attacks which has not declined like Iraq. 
+**Weapon Types: **  
+
+The primary weapons used in terrorist attacks are explosives followed by firearms. Unknown has quite a large share here, this is unusual and is something that should be explored further. 
+
+**Primary Groups:**
+
+The majority of attacks in this region have been attributed to the Taliban. Given the current shifting political climate this raises questions about whether they are classes as a terrorist organization now that they are running the state. The database does not collect attacks on behalf of state actors, obviously this does not retrospectively apply to previous data, however it does raise an important question for future analysis. 
+
+
+
+```{r warning=FALSE, message=FALSE, out.width="100%"}
+
+## Filter the data
+data <- gtd_data %>%
+  filter(country_txt == "Afghanistan")
+
+## Variable for String Formatting 
+replace_Name = "Afghanistan"
+is_group <- F;
+
+
+## Graphing Functions
+plot.major_events(data)
+
+plot.map(data)
+
+plot.number_attacks_over_time(data , replace_Name)
+
+plot.nkill_nWound_over_time(data , replace_Name)
+
+plot.Weaponstype (data , replace_Name , 15000)
+
+plot.Weapons_over_time(data , replace_Name)
+
+if (is_group)
+{
+  plot.treemap.target_attackt_weap_n(data, replace_Name)
+  
+} 
+## Using else statement, like a function, only displays one plot in HTML - this is very annoying
+if (! is_group)
+{
+  plot.groups_by_casualties(data , replace_Name, 6000)
+}
+if (! is_group)
+{
+  plot.treemap.groupname_attackt_weap_n (data, replace_Name)
+}
+plot.proportion_attacktype_over_time(data, replace_Name)
+
+plot.count.attacktype_by_weapon_by_casualties(data, replace_Name)
+
+```
+
+ 
+
+### Taliban Exploration
+
+After the US invasion in Afghanistan the Taliban were classed as a terrorist organization and they have been responsible for most recorded acts of terrorism in the region. 
+
+**Trend Over Time:**    
+
+Their trend over time very much the same as Afghanistan.
+
+**Weapon Types: **  
+
+Here we can again see explosives, firearms, and the strangely large portion of unknown weapon type. Again, further exploration needs to occur into why this data is missing. 
+
+**Target Type:**
+
+Unlike ISIL, the Taliban’s primary target type is police and military. Police mainly through armed assaults, and military through bombing. This could be the difference between attacks occurring with local forces and US forces. 
+
+Another quite large category of note is the proportion of assassinations in the government sector. 
+
+The target type here shows that this group is primarily focused on fighting for who is running the region. 
+
+
+```{r  warning=FALSE, message=FALSE, out.width="100%"}
+
+## Filter the data
+data <- gtd_data %>%
+  filter(gname == "Taliban")
+
+## Variable for String Formatting 
+replace_Name = "Taliban"
+
+is_group <- TRUE;
+
+
+## Graphing Functions
+plot.major_events(data)
+
+plot.map(data)
+
+plot.number_attacks_over_time(data , replace_Name)
+
+plot.nkill_nWound_over_time(data , replace_Name)
+
+plot.Weaponstype (data , replace_Name , 15000)
+
+plot.Weapons_over_time(data , replace_Name)
+
+if (is_group)
+{
+  plot.treemap.target_attackt_weap_n(data, replace_Name)
+  
+} 
+## Using else statement, like a function, only displays one plot in HTML - this is very annoying
+if (! is_group)
+{
+  plot.groups_by_casualties(data , replace_Name, 6000)
+}
+if (! is_group)
+{
+  plot.treemap.groupname_attackt_weap_n (data, replace_Name)
+}
+plot.proportion_attacktype_over_time(data, replace_Name)
+
+plot.count.attacktype_by_weapon_by_casualties(data, replace_Name)
+
+```
+ 
+
+### Boko Haram
+
+The Boko Haram was a group was fourth in the number of casualties and gained the attention of global media by the kidnapping of 267 school girls in 2014 with 100 of the girls as of 2021 still missing^[Nigeria: Seven years since Chibok, the government fails to protect children, Amnesty International, https://www.amnesty.org/en/latest/press-release/2021/04/nigeria-seven-years-since-chibok-the-government-fails-to-protect-children/].
+
+***Summary of findings to be added *** *(ran out of time to write up summary)*
+
+```{r warning=FALSE, message=FALSE, out.width="100%"}
+
+## Filter the data
+data <- gtd_data %>%
+  filter(gname == "Boko Haram")
+
+## Variable for String Formatting 
+replace_Name = "Boko Haram"
+is_group <- TRUE;
+
+
+
+## Graphing Functions
+plot.major_events(data)
+
+plot.map(data)
+
+plot.number_attacks_over_time(data , replace_Name)
+
+plot.nkill_nWound_over_time(data , replace_Name)
+
+plot.Weaponstype (data , replace_Name , 1200)
+
+plot.Weapons_over_time(data , replace_Name)
+
+if (is_group)
+{
+  plot.treemap.target_attackt_weap_n(data, replace_Name)
+  
+} 
+## Using else statement, like a function, only displays one plot in HTML - this is very annoying
+if (! is_group)
+{
+  plot.groups_by_casualties(data , replace_Name, 6000)
+}
+if (! is_group)
+{
+  plot.treemap.groupname_attackt_weap_n (data, replace_Name)
+}
+plot.proportion_attacktype_over_time(data, replace_Name)
+ 
+plot.count.attacktype_by_weapon_by_casualties(data, replace_Name)
+
+```
+
+
+ 
+
+
+### Sri Lanka
+
+After exploring the interactive map there was a distinct cluster on Sri Lanka. Due to this small geographic area and such a high number of attacks further was required to better understand what was happening in this region. 
+
+***Summary of findings to be added*** *(ran out of time to write up summary)*
+
+```{r warning=FALSE, message=FALSE, out.width="100%"}
+
+## Filter the data
+data <- gtd_data %>%
+  filter(country_txt == "Sri Lanka"  )
+
+## Variable for String Formatting 
+replace_Name = "Sri Lanka"
+is_group <- F;
+
+
+## Graphing Functions
+plot.major_events(data)
+
+plot.map(data)
+
+plot.number_attacks_over_time(data , replace_Name)
+
+plot.nkill_nWound_over_time(data , replace_Name)
+
+plot.Weaponstype (data , replace_Name , 1700)
+
+plot.Weapons_over_time(data , replace_Name)
+
+if (is_group)
+{
+  plot.treemap.target_attackt_weap_n(data, replace_Name)
+  
+} 
+## Using else statement, like a function, only displays one plot in HTML - this is very annoying
+if (! is_group)
+{
+  plot.groups_by_casualties(data , replace_Name, 1800)
+}
+if (! is_group)
+{
+  plot.treemap.groupname_attackt_weap_n (data, replace_Name)
+}
+plot.proportion_attacktype_over_time(data, replace_Name)
+
+plot.count.attacktype_by_weapon_by_casualties(data, replace_Name)
+
+
+```
+
+
+
+ 
+
+### Liberation Tigers of Tamil Eelam (LTTE)
+
+The Liberation Tigers of Tamil Eelam exploration continues on from the exploration of the attacks in Sri Lanka.
+
+***Summary of findings to be added*** *(ran out of time to write up summary)*
+
+```{r warning=FALSE, message=FALSE, out.width="100%"}
+
+## Filter the data
+data <- gtd_data %>%
+  filter(gname == "Liberation Tigers of Tamil Eelam (LTTE)")
+
+## Variable for String Formatting 
+replace_Name = "Liberation Tigers of Tamil Eelam (LTTE)"
+is_group <- TRUE;
+
+
+## Graphing Functions
+plot.major_events(data)
+
+plot.map(data)
+
+plot.number_attacks_over_time(data , replace_Name)
+
+plot.nkill_nWound_over_time(data , replace_Name)
+
+plot.Weaponstype (data , replace_Name , 1000)
+
+plot.Weapons_over_time(data , replace_Name)
+
+if (is_group)
+{
+  plot.treemap.target_attackt_weap_n(data, replace_Name)
+  
+} 
+## Using else statement, like a function, only displays one plot in HTML - this is very annoying
+if (! is_group)
+{
+  plot.groups_by_casualties(data , replace_Name, 6000)
+}
+if (! is_group)
+{
+  plot.treemap.groupname_attackt_weap_n (data, replace_Name)
+}
+plot.proportion_attacktype_over_time(data, replace_Name)
+
+plot.count.attacktype_by_weapon_by_casualties(data, replace_Name)
+
+
+```
+
+
+
+ 
+
+### Country and Region - Northern Ireland 
+
+The exploration of why the United Kingdom was ranked so high on the number of attacks was followed up by looking into what was happening in Northern Ireland. 
+
+***Summary of findings to be added*** *(ran out of time to write up summary)*
+
+```{r  warning=FALSE, message=FALSE, out.width="100%"}
+
+## Filter the data
+data <- gtd_data %>%
+  filter(provstate == "Northern Ireland" | country_txt == "Ireland"  )
+
+## Variable for String Formatting 
+replace_Name = "Northen Ireland"
+is_group <- F;
+
+
+## Graphing Functions
+plot.major_events(data)
+
+plot.map(data)
+
+plot.number_attacks_over_time(data , replace_Name)
+
+plot.nkill_nWound_over_time(data , replace_Name)
+
+plot.Weaponstype (data , replace_Name , 100)
+
+plot.Weapons_over_time(data , replace_Name)
+
+if (is_group)
+{
+  plot.treemap.target_attackt_weap_n(data, replace_Name)
+  
+} 
+## Using else statement, like a function, only displays one plot in HTML - this is very annoying
+if (! is_group)
+{
+  plot.groups_by_casualties(data , replace_Name, 100)
+}
+if (! is_group)
+{
+  plot.treemap.groupname_attackt_weap_n (data, replace_Name)
+}
+plot.proportion_attacktype_over_time(data, replace_Name)
+
+plot.count.attacktype_by_weapon_by_casualties(data, replace_Name)
+
+
+```
+
+ 
+
+### Irish Republican Army (IRA)
+
+The exploration of what was happening in Northern Ireland highlighted the history of conflict by the Irish Republican Army (IRA).
+
+***Summary of findings to be added*** *(ran out of time to write up summary)*
+
+```{r warning=FALSE, message=FALSE, out.width="100%"}
+
+## Filter the data
+data <- gtd_data %>%
+  filter(gname == "Irish Republican Army (IRA)" )
+
+## Variable for String Formatting 
+replace_Name = "Irish Republican Army" 
+is_group <- TRUE;
+
+
+
+## Graphing Functions
+plot.major_events(data)
+
+plot.map(data)
+
+plot.number_attacks_over_time(data , replace_Name)
+
+plot.nkill_nWound_over_time(data , replace_Name)
+
+plot.Weaponstype (data , replace_Name , 450)
+
+plot.Weapons_over_time(data , replace_Name)
+
+if (is_group)
+{
+  plot.treemap.target_attackt_weap_n(data, replace_Name)
+  
+} 
+## Using else statement, like a function, only displays one plot in HTML - this is very annoying
+if (! is_group)
+{
+  plot.groups_by_casualties(data , replace_Name, 6000)
+}
+if (! is_group)
+{
+  plot.treemap.groupname_attackt_weap_n (data, replace_Name)
+}
+plot.proportion_attacktype_over_time(data, replace_Name)
+
+plot.count.attacktype_by_weapon_by_casualties(data, replace_Name)
+
+
+```
+
+
+
+ 
+
+
+
+# Work In Progress
+
+## Test Leaflet time slider 
+
+This functions correctly however requires an R server to be running or to be simulated within the R studio environment. I am not removing this so I can keep everything together as this is a very helpful tool for data exploration. 
+
+```{r}
+library(shiny)
+
+
+## Transform Data - use slice to create smaller maps
+summarised_Data <- gtd_data %>%
+    select( eventid , country_txt, targtype1_txt , longitude , latitude , gname,attacktype1_txt,  nkill, nwound, iyear, imonth, iday , summary) %>%
+    filter(longitude != is.na(longitude) & latitude != is.na(latitude) ) %>%
+    mutate(
+      date = paste0(  iday,"/", imonth, "/", iyear ) ,
+      nkill= replace_na(nkill, 0) ,
+      nwound= replace_na(nwound, 0) ,
+      summary = ifelse( summary == "", "No Summary Provided", summary)
+
+    )
+
+summarised_Data <- summarised_Data %>%
+  mutate(popup = paste0("<b> Event Id:",summarised_Data$eventid, "</b>",
+                       "<br>Country: ",summarised_Data$country_txt,
+                       "<br>Date: ",summarised_Data$date,
+                       "<br>",
+                       "<br><b>Event Information:</b> ",
+                       "<br>Group Name: ",summarised_Data$gname,
+                       "<br>Target: ",summarised_Data$targtype1_txt,
+                       "<br>Attack Type: ",summarised_Data$targtype1_txt,
+                       "<br>People Killed: ",summarised_Data$nkill,
+                       "<br>People Wounded: ",summarised_Data$nwound,
+                       "<br><br><b>Summary: </b><br>",summarised_Data$summary
+                       ),
+         Hover = paste0("Date: ",summarised_Data$date,
+                        ".       ",
+                       "Target: ", summarised_Data$targtype1_txt ,
+                       ".       (Click for more infromation)")
+  );
+
+
+
+
+## Create UI Element
+    ui <- bootstrapPage(
+      tags$style(type = "text/css", "html, body {width:100%;height:100%}"),
+      leafletOutput("map", width = "100%", height = "100%"),
+      absolutePanel(top = 10, right = 10,
+                    style="z-index:500;", # legend over my map (map z = 400)
+                    tags$h3("map"),
+                    sliderInput("periode", "Time Filter",
+                                min(summarised_Data$iyear),
+                                max(summarised_Data$iyear),
+                                value = range(summarised_Data$iyear),
+                                step = 5,
+                                sep = ""
+                    )
+           )
+    )
+
+server <- function(input, output, session) {
+      # reactive filtering data from UI
+
+      reactive_data_chrono <- reactive({
+        summarised_Data %>%
+          filter(iyear >= input$periode[1] &
+                   iyear <= input$periode[2])
+      })
+
+
+      # static backround map
+      output$map <- renderLeaflet({
+        #set up base map
+        leaflet::leaflet() %>%
+          addProviderTiles(providers$CartoDB.Positron) %>%
+          addProviderTiles(providers$CartoDB.Positron, group = "Light") %>%
+          addProviderTiles(providers$CartoDB.DarkMatter, group = "Dark") %>%
+          addProviderTiles(providers$OpenStreetMap, group = "OSM") %>%
+          addLayersControl(baseGroups = c('Light', 'Dark', 'OSM')) %>%
+          addMiniMap(
+            tiles = providers$CartoDB.Positron,
+            minimized = FALSE,
+            toggleDisplay = TRUE
+          )
+
+
+      })
+
+      # reactive circles map
+      observe({
+        leafletProxy("map", data = reactive_data_chrono()) %>%
+              clearMarkers() %>%
+               clearShapes() %>%
+          clearMarkerClusters() %>%
+          leaflet::addCircleMarkers(
+            lat= ~latitude,
+            lng = ~longitude,
+            popup = ~popup,
+            label = ~Hover,
+            clusterOptions = markerClusterOptions()
+
+          )
+
+      })
+    }
+
+
+## Uncomment this to run this function within the notebook
+# shinyApp(ui, server)
+```
+
+
