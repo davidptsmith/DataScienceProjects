@@ -14,10 +14,5 @@ https://nbviewer.org/github/davidptsmith/DataScienceProjects/blob/main/01%20Supe
 
 
 <html>
-<head>
-<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
-</head>
-<body style="margin:0px;padding:0px;overflow:hidden">
-  <iframe src="https://nbviewer.org/github/davidptsmith/DataScienceProjects/blob/main/01%20Super%20Mario%20RL/_docs/super_mario_rl_docs.pdf" frameborder="0" style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;height:100%;width:100%;position:absolute;top:0px;left:0px;right:0px;bottom:0px" height="100%" width="100%"></iframe>
-</body>
+<embed id="plugin" type="application/x-google-chrome-pdf" original-url="https://nbviewer.org/github/davidptsmith/DataScienceProjects/blob/main/01%20Super%20Mario%20RL/_docs/super_mario_rl_docs.pdf" src="chrome-extension://mhjfbmdgcfjbbpaeojofohoefgiehjai/7502e069-f724-4c18-b1d8-d2a0142456be" background-color="4283586137" javascript="allow" full-frame="" pdf-viewer-update-enabled="">
 </html>
