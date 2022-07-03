@@ -1,0 +1,6 @@
+,station_id,station_name,country,region,elevation,daily_start_date,daily_end_date,longitude,latitude
+0,94610,Belmont Perth Airport,AU,WA,20.0,1750-02-01,2022-04-22,115.967,-31.9403
+1,94608,Mount Lawley Perth Metro Aws,AU,WA,25.0,1750-02-01,2022-04-19,115.8667,-31.9167
+2,YPJT0,Perth / Canning Vale,AU,WA,30.0,2009-10-23,2022-04-10,115.881,-32.0975
+3,95612,Gingin Aero,AU,WA,74.0,1750-02-01,2022-04-13,115.8642,-31.4628
+4,94605,Mandurah Aws,AU,WA,21.0,1750-02-01,2022-04-13,115.7333,-32.5167

@@ -1,0 +1,15 @@
+CREATE TABLE FactWeather (
+ 	weather_id varchar(50) primary key NOT NULL,
+	date_id varchar(50) NOT NULL,
+	station_id varchar(50) NOT NULL,
+	temp_min float,
+	temp_ave float,
+	temp_max float,
+	precipitation_mm float,
+	wind_direction float,
+	wind_speed float,
+	pressure float,
+	distance int,
+	FOREIGN KEY (date_id) REFERENCES DimDate(date_id),
+	FOREIGN KEY (station_id) REFERENCES DimWeatherStn(station_id),
+);

@@ -1,0 +1,2208 @@
+---
+title: "21484971_DavidSmith_Assignment_2"
+author: "David Smith (21484971)"
+date: "28/03/2022"
+output:
+  html_document:
+    theme: paper
+  word_document:
+    toc: yes
+    toc_depth: '3'
+  pdf_document:
+    fig_height: 6
+    fig_width: 8
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+# Env Setup
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+
+```
+
+
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+library(MASS)
+# library(ISLR)
+library(ISLR2)
+library(graphics)
+library(ggplot2)
+library(FNN)
+library(equatiomatic)
+library(leaps)
+library(GGally)
+library(dendextend)
+library(tidyverse)
+library(skimr)
+library(broom)
+library(caret)
+library(ggplot2)
+library(ggpmisc)
+library(ggdendro)
+library(splines)
+library(glmnet)
+library(DAAG)
+
+
+
+```
+
+
+# --
+
+# Datasets 
+
+
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+data("Auto")
+data("Hitters")
+Wage = ISLR2::Wage
+Weekly = ISLR::Weekly
+
+head(Hitters)
+head(Wage)
+
+```
+## Skim Data 
+
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+
+skimr::skim(df)
+
+```
+
+## Summary 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+summary(df)
+```
+
+## Shape
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+dim(diamonds)
+```
+
+
+## Drop Nulls & Values 
+
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+df = df %>% drop_na()
+
+df = df %>% select()
+
+filter(df, variable == "condition")
+
+filter(df, hair_color == "none" & eye_color == "black")
+
+
+
+
+```
+
+## Re-level factors 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+df$variables_to_rename <- factor(df$variables_to_rename, levels = c("level_1" , "level_2", "level_3"))
+
+```
+
+
+## Rename Dataframe 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+df
+colnames(df) <- c("good", "better")
+```
+
+
+
+## If else, add column tidy 
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+ auto_new <- Auto %>% 
+  mutate(
+    mpgclass = ifelse(
+       mpg < 20, "low", 
+       ifelse(
+         mpg < 27 , "medium", "high"
+       )
+    )
+  ) %>% 
+  relocate(
+    mpgclass
+  ) 
+
+data <-  auto_new
+
+data$mpgclass <- factor(data$mpgclass, levels = c("low" , "medium", "high"))
+
+## Plot count 
+data %>% 
+  ggplot(aes(x =mpgclass , fill=mpgclass)) +
+  geom_bar() +
+  labs(
+    title =  "Count of Observation by Class"
+  ); 
+
+
+```
+
+
+## Add rows to dataframe & columns
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+
+df = rbind(df, cbind( val , grid , y_pred ))
+
+```
+
+
+## Sort values 
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+
+df %>% 
+  arrange(
+    variable_to_sort
+  )
+
+```
+
+
+
+## Loop and add to df
+
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+local_df = data.frame()
+loops <- c(2, 3,3)
+
+for (val in loops) {
+  
+  fit <- lm(mpg ~ bs(horsepower , degree = val ), data = df )
+  y_pred <- predict(fit, data.frame(horsepower = grid))
+  
+  cat(  "\n MSE for degree ", deg , " :"   , mse(fit))
+  
+  local_df = rbind(local_df, cbind(deg , grid,  y_pred))
+}
+ 
+```
+
+
+## Scale Data
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+auto_scaled <-  Auto76 %>%
+  select(mpg,
+         cylinders,
+         displacement,
+         horsepower,
+         weight,
+         acceleration,
+         year) %>%
+  mutate(
+    mpg = scale(mpg),
+    cylinders = scale(cylinders),
+    displacement = scale(displacement),
+    horsepower = scale(horsepower),
+    weight = scale(weight),
+    acceleration = scale(acceleration),
+    year = scale(year)
+  )
+
+head(auto_scaled)
+```
+
+
+## Group and Count 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+df %>% 
+  select(
+    chas
+  ) %>% 
+  group_by(
+    chas
+  ) %>% 
+  summarise(
+    count = n()
+    #  med = median(ptratio)
+  ) 
+
+```
+
+## ID From Column 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+Boston <- tibble::rowid_to_column(Boston, "ID")
+
+```
+
+## Count Greater than value 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+Boston %>% 
+  summarise(
+       greater_7 = sum(rm > 7), 
+       greater_8 = sum(rm > 8)
+  )
+
+```
+
+
+
+
+
+
+
+
+# -- 
+
+# Testing Traing split 
+
+
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+set.seed(406411)
+
+x <- model.matrix(Salary ~ ., Hitters)[, -1]
+y <- Hitters$Salary
+
+
+train <- sample(c(TRUE, FALSE), nrow(Hitters), rep = TRUE) 
+test <- !train
+
+
+x_train = x[train,]
+x_test = x[test,]
+
+y_train = y[train]
+y_test=  y[test]
+```
+
+
+
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+auto_data <-auto_new %>% 
+  mutate(
+    data_type = ifelse(
+      year == 75, "Testing", "Training"
+    )
+  )
+
+data_training <- auto_data %>%
+  filter(
+    data_type == "Training"
+  )
+
+data_test <- auto_data %>%
+  filter(
+     data_type ==  "Testing"
+  )
+```
+
+
+
+
+
+
+
+
+
+
+# --
+
+# Measures 
+
+## Confusion matrix 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+#Import required library
+library(caret)
+ 
+#Creates vectors having data points
+expected_value <- factor(auto_new$mpgclass)
+predicted_value <-factor(lda.pred$class)
+
+## Set the order
+factor_order = c("low","medium","high") 
+
+expected_value <- factor( expected_value, levels=factor_order )
+predicted_value<- factor( predicted_value, levels=factor_order )
+ 
+#Creating confusion matrix
+cf_mx <- confusionMatrix(data= predicted_value , reference = expected_value)
+
+
+```
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+cf_mx
+
+```
+
+
+## Error Calcs 
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+set.seed(406411)
+
+x <- model.matrix(Salary ~ ., Hitters)[, -1]
+y <- Hitters$Salary
+
+
+train <- sample(c(TRUE, FALSE), nrow(Hitters), rep = TRUE) 
+test <- !train
+
+
+x_train = x[train,]
+x_test = x[test,]
+
+y_train = y[train]
+y_test=  y[test]
+
+```
+
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+lm_1 = lm(Salary~. , data=Hitters, subset = train)
+
+y_pred = predict(lm_1 , newdata=Hitters[test, ])
+
+
+# MAE
+mean(abs(y_pred - y_test))
+
+# MSE
+mean (( y_pred - y_test)^2)
+
+#RMSE
+sqrt(mean (( y_pred - y_test)^2))
+
+
+```
+
+
+
+
+
+
+# --
+
+
+# Data Visualisations 
+
+## Scatter plot
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+## Replace variables 
+
+lm_eqn <- function(df){
+    m <- lm(variable_y ~ variable_x, df);
+    eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2, 
+         list(a = format(unname(coef(m)[1]), digits = 2),
+              b = format(unname(coef(m)[2]), digits = 2),
+             r2 = format(summary(m)$r.squared, digits = 3)))
+    as.character(as.expression(eq));
+}
+
+
+lm_1 = lm(variable_y ~ variable_x, df)
+summary(lm_1)
+
+
+mse <- function(sm) 
+    mean(sm$residuals^2)
+
+mse(lm_1)
+
+
+```
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+p <- df %>% 
+  ggplot(
+    aes( variable_y, variable_x)
+  ) +
+   geom_smooth(method = "lm", se=FALSE, color="blue") +
+  geom_point()  +
+  xlab("variable_y") + # for the x axis label
+   ylab("variable_x") + 
+  labs(
+    title= "Scatter plot of variable_y against variable_x", 
+  )
+
+text_x = 150
+text_y = 35
+
+p1 <- p + geom_text(x = text_x, text_y = 35, label = lm_eqn(df), parse = TRUE )
+
+p1
+```
+
+
+
+## Parallel Coor Plot
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+## Layered 
+rbind(first_seven , second_seven) %>%   
+  select(
+    - name, 
+    - origin
+  ) %>% 
+  ggparcoord(
+    groupColumn = "Half",
+    columns = 1:7,
+      scale = "center",
+    alphaLines = 0.2,
+    showPoints = TRUE) +
+           scale_color_brewer(palette = "Set2" )  
+
+
+## Facet Wrap
+df %>% 
+  ggparcoord(
+    groupColumn = "Half",
+    columns = 1:7,
+      scale = "center",
+    alphaLines = 0.2,
+    showPoints = TRUE) +
+           scale_color_brewer(palette = "Set2" )  +
+   facet_wrap(~ Half , ncol = 1) 
+
+```
+
+
+## Line 
+
+
+
+
+## Bar chart 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+df %>% 
+  ggplot(aes(x =variable_1 , fill=variable_1)) +
+  geom_bar() +
+  labs(
+    title =  "Count of Observation by Class"
+  ); 
+
+```
+
+
+
+## boxplot 
+
+
+multiple box plots 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+require(reshape2)
+df %>%
+  select(
+    acceleration,
+    displacement,
+    horsepower,
+    weight,
+    mpg, 
+    name
+  ) %>%
+  melt() %>% 
+  ggplot(aes(variable, value))+
+  geom_boxplot(aes(fill = name))
+  
+```
+
+
+
+## Correlation Matrix 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+library(ggcorrplot)
+library("Hmisc")
+
+corr = rcorr(as.matrix(df))
+
+corr$r <- round(corr$r , digits = 2)
+
+ggcorrplot(corr$r,
+           hc.order = TRUE,
+           type = "upper",
+           lab = TRUE) +
+  theme_minimal()
+
+```
+
+
+## Pairs plot 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+df %>%
+  select(
+    vairbale_1,
+    vairbale_2,
+    vairbale_3,
+    vairbale_4,
+  ) %>%
+  ggpairs(aes(alpha = 0.4))
+```
+
+## Gg pairs
+
+```{r , echo=FALSE,message=FALSE,  warning=FALSE}
+Smarket %>%   
+  select(
+    - Year, 
+  ) %>%
+  ggpairs( aes(alpha = 0.4 , colour=Direction))
+  
+  
+ 
+```
+
+
+## Histagram 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+df  %>%
+  pivot_longer(cols = everything(), names_to = "variable", values_to = "value") %>%
+    ggplot( aes(value)) + 
+    geom_histogram(bins = 10) + 
+    facet_wrap(~variable, scales = 'free' , ncol = 2)
+
+
+
+```
+
+
+## Multi variable  Histagrams & Box plot 
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+bank %>%
+  pivot_longer(!Status, names_to = "variable", values_to = "value") %>%  
+    ggplot( aes(value, fill=Status )) + 
+    geom_histogram(bins = 10) + 
+    facet_wrap(~variable, scales = 'free_x' , ncol = 2)+ 
+  theme_minimal()
+  
+  
+bank %>%
+  pivot_longer(!Status, names_to = "variable", values_to = "value") %>%  
+    ggplot( aes(value, fill=Status )) + 
+    geom_boxplot() + 
+    facet_wrap(~variable, scales = 'free_x', ncol = 2) + 
+  theme_minimal()
+  
+
+```
+
+
+## Scatter plot with line 
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+Smarket$index <- seq(1:nrow(Smarket)) 
+
+
+Smarket %>% 
+  ggplot(aes(index, Volume))  +
+  geom_point()+
+  geom_smooth(method = lm) 
+
+Smarket %>% 
+  ggplot(aes(index, Lag1))  +
+  geom_point()+
+  geom_smooth(method = lm)
+
+
+```
+
+
+
+## Residuals plot 
+
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+
+#fit a regression model
+model <- lm(mpg~disp+hp, data=mtcars)
+
+#get list of residuals 
+res <- resid(model)
+
+#produce residual vs. fitted plot
+plot(fitted(model), res)
+
+#add a horizontal line at 0 
+abline(0,0)
+
+
+```
+
+
+## Plot Factor Count 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+auto_data %>% 
+  group_by(
+    data_type
+  ) %>% 
+  summarise(
+    perc = n()/ nrow(auto_data)    
+  )
+
+```
+
+## Density Plot 
+
+```{r, echo=FALSE, results='hide',message=FALSE,  warning=FALSE}
+
+plot_density <- function(var, title ){
+  d <- density(var)
+  plot(d , main=title)
+  polygon(d, col="lightblue", border="blue" )
+}
+
+```
+
+
+# --
+
+
+# Equations 
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+library(equatiomatic)
+
+## model 
+lm1 = lm(data = Auto, acceleration~displacement + horsepower + weight + mpg + I(displacement*horsepower))
+
+## Formula 
+extract_eq(lm1, wrap= TRUE, terms_per_line = 2)
+
+
+# Expression
+extract_eq(lm1, wrap = TRUE, use_coefs = TRUE)
+```
+
+# --
+
+# Sampling 
+
+## Bootstrap 
+
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+library(boot)
+
+results <- boot(data=bigcity, statistic=alpha.fn,
+   R=500)
+
+b_mean = results$t[,1 ]
+b_x = results$t[,2]
+b_u = results$t[,3]
+
+```
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+se <- function(x) sqrt(var(x) / length(x))
+
+mean(b_mean)
+se(b_mean)
+
+mean(b_mean) + 2* se(b_mean)
+mean(b_mean) - 2* se(b_mean)
+
+```
+
+
+
+## LOOCV & CV
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+#"boot", "boot632", "optimism_boot", "boot_all", "cv", "repeatedcv", "LOOCV", "LGOCV"
+## Review help docs for further params 
+# MyTrainControl=trainControl(
+#     method = "cv",
+#     number=5,
+#     repeats=5
+# )
+
+## Predictions
+#model_1$pred
+
+## Results 
+#model_1$results
+
+
+#specify the cross-validation method
+ctrl <- trainControl(method = "LOOCV")
+
+#fit a regression model and use LOOCV to evaluate performance
+model_1 <- train(Direction ~ Lag1+Lag2+Lag4, data = weekly, method = "qda", trControl = ctrl)
+
+#view summary of LOOCV               
+print(model_1)
+
+paste0("Error for ", model_1$modelInfo$label , ": " , round(1 - model_1$results$Accuracy , 4))
+```
+
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+som_array <- c()
+
+res <- rep(0, NROW(Weekly))
+for (i in 1:NROW(Weekly)) {
+  fm.loo <-
+    glm(
+      Direction ~ Lag1 + Lag2,
+      data = Weekly,
+      family = binomial,
+      subset = -i
+    )
+  pred.loo <-
+    levels(Weekly$Direction)[(predict(fm.loo, newdata = Weekly[i, ]) > 0.5) +
+                               1]
+  res[i] <- Weekly$Direction[i] != pred.loo
+  
+  # print(paste0(i , ": ",  res[i])
+  som_array <- c(som_array, res[i])
+}
+
+mean(som_array)
+
+```
+
+
+
+
+
+# --
+
+# Classification
+
+
+
+## KNN 
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+##run knn function
+pr <- knn(iris_train, iris_test ,cl=iris_target_category,k=13)
+ 
+ ##create confusion matrix
+tab <- table(pr,iris_test_category)
+tab
+ 
+ ##this function divides the correct predictions by total number of predictions that tell us how accurate teh model is.
+ 
+accuracy <- function(x){sum(diag(x)/(sum(rowSums(x)))) * 100}
+accuracy(tab)
+
+
+```
+
+
+
+## GLM (Logistic Reg)
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+glm_1 = glm(Direction~Lag1+Lag2+Lag3+Lag4+Lag5+Volume, data=Smarket, family=binomial)
+summary(glm_1) 
+```
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+#Import required library
+library(caret)
+threshold = 0.55
+
+glm_1.probs <- predict(glm_1, type="response")
+
+glm.pred <- rep("Down", length(Smarket.glm.probs))
+glm.pred[Smarket.glm.probs>0.55] <- "Up"
+
+
+#Creates vectors having data points
+expected_value <- factor(Smarket$Direction )
+predicted_value <- factor(glm.pred)
+ 
+#Creating confusion matrix
+example <- confusionMatrix(data=predicted_value, reference = expected_value)
+ 
+#Display results 
+example
+
+
+```
+
+
+
+
+
+
+
+## LDA
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+lda.fit <- lda(Direction ~ Lag1 + Lag2, data=Smarket)
+lda.fit
+
+
+# plot(lda.fit)
+lda.pred <- predict(lda.fit, data = Smarket) 
+names(lda.pred)
+
+#Import required library
+library(caret)
+ 
+#Creates vectors having data points
+expected_value <- factor(Smarket$Direction)
+predicted_value <-factor(lda.pred$class)
+ 
+#Creating confusion matrix
+cf_mx <- confusionMatrix(data= predicted_value , reference = expected_value)
+ 
+cf_mx
+```
+
+**Set probabilities**
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+lda.fit <- lda(Direction ~ Lag1 + Lag2, data=training)
+
+lda.fit
+
+plot(lda.fit)
+
+```
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+lda.probs2 <- predict(lda.fit, testing , type="response")
+
+lda.pred <- rep("Down", length(lda.probs2))
+
+lda.pred[lda.probs2 > 0.5] <- "Up"
+
+ 
+#Creates vectors having data points
+expected_value <- factor(testing$Direction )
+predicted_value <- factor(lda.pred)
+ 
+#Creating confusion matrix
+example <- confusionMatrix(data=predicted_value, reference = expected_value)
+ 
+#Display results 
+example
+```
+
+
+
+
+
+
+### LOOCV LDA
+```{r, echo=FALSE, results='hide',message=FALSE,  warning=FALSE}
+library(caret)
+
+#specify the cross-validation method
+ctrl <- trainControl(method = "LOOCV")
+
+#fit a regression model and use LOOCV to evaluate performance
+lda_1 <- train(Direction ~ Lag1+Lag2+Lag4, data = weekly, method = "lda", trControl = ctrl)
+
+#view summary of LOOCV               
+print(lda_1)
+
+paste0("Error for ", lda_1$modelInfo$label , ": " , round(1 - lda_1$results$Accuracy , 4))
+```
+
+## QDA
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+lda.fit <- qda(Direction ~ Lag1 + Lag2, data=Smarket)
+lda.fit
+
+
+# plot(lda.fit)
+lda.pred <- predict(lda.fit, newdata = Smarket) 
+names(lda.pred)
+
+ 
+#Creates vectors having data points
+expected_value <- factor(Smarket$Direction)
+predicted_value <-factor(lda.pred$class)
+ 
+#Creating confusion matrix
+cf_mx <- confusionMatrix(data= predicted_value , reference = expected_value)
+ 
+cf_mx
+```
+
+
+### LOOCV QDA
+```{r , echo=FALSE, results='hide',message=FALSE,  warning=FALSE}
+#specify the cross-validation method
+ctrl <- trainControl(method = "LOOCV")
+
+#fit a regression model and use LOOCV to evaluate performance
+qda_1 <- train(Direction ~ Lag1+Lag2+Lag4, data = weekly, method = "qda", trControl = ctrl)
+
+#view summary of LOOCV               
+print(qda_1)
+
+paste0("Error for ", qda_1$modelInfo$label , ": " , round(1 - qda_1$results$Accuracy , 4))
+
+```
+
+
+
+## Multinom from Mass
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+multi_norm <- multinom(group.id~. , data = dat )
+
+pred <- predict(multi_norm, dat)
+
+#Creates vectors having data points
+expected_value <- factor(dat$group.id)
+predicted_value <-factor(pred)
+ 
+#Creating confusion matrix
+cf_mx <- confusionMatrix(data= predicted_value , reference = expected_value)
+ 
+cf_mx
+```
+
+
+
+
+## Naive Bayes Classification  
+
+**Definition**
+
+**code**
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+
+## import library for naive bayes 
+library(naivebayes)
+
+## Fit the naive bayes model 
+model <- naive_bayes(group.id ~ ., data = dat, usekernel = T) 
+
+## Review the model 
+model 
+
+## Plot to visualise the model 
+plot(model) 
+
+```
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+## Create prediction for the model 
+model.pred <- predict(model, newdata = dat) 
+
+#Creates vectors having data points
+expected_value <- factor(dat$group.id)
+predicted_value <-factor(model.pred)
+ 
+#Creating confusion matrix
+cf_mx <- confusionMatrix(data= predicted_value , reference = expected_value)
+ 
+cf_mx
+```
+
+
+
+## GLM LOO CV
+
+**Definition**
+
+**code**
+
+```{r , echo=FALSE, results='hide',message=FALSE,  warning=FALSE}
+
+## Models list http://topepo.github.io/caret/train-models-by-tag.html#Ridge_Regression
+
+#specify the cross-validation method
+ctrl <- trainControl(method = "LOOCV")
+
+#fit a regression model and use LOOCV to evaluate performance
+glm_1 <- train(Direction ~ Lag1+Lag2+Lag4, data = weekly, method = "glm", trControl = ctrl)
+
+#view summary of LOOCV               
+print(glm_1)
+
+paste0("Error for ", glm_1$modelInfo$label , ": " , round(1 - glm_1$results$Accuracy , 4))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# -- 
+
+# Regression
+
+
+
+
+## Linear Regression
+
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+
+
+library(broom)
+Hitters.lm <-  lm(Salary~. , data=Hitters)
+
+## Sort by pvalues
+df_local = broom::tidy(summary(Hitters.lm))
+df_local %>% 
+  arrange(
+    p.value
+  )
+
+```
+
+
+
+
+## Multinomial regression 
+
+**Definition**
+
+**code**
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+
+powers <- c(2,3,4,5,6)
+df_local = data.frame()
+
+for (val in powers) {
+  hills.lm_reg <- lm(time ~ dist + I(dist^val), data=hills )
+  outcome <- mean( hills.lm_reg$residuals^2 )
+  df_local <- rbind(df_local , c(outcome , val))
+}
+
+colnames(df_local) <- c("MSE", "powers")
+
+df_local %>% 
+ggplot(aes(y=MSE , x = powers)) +
+  geom_point()
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+# --
+
+
+
+
+# Best Subest Selection 
+
+**Definition**
+
+**code**
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+
+```
+
+
+
+
+# Forwards & Backwards Selection 
+
+**Definition**
+
+**code**
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+
+
+## method=c("exhaustive", "backward", "forward", "seqrep"),
+
+
+regfit_fwd = regsubsets(variable_y~., data = df,    nvmax=length(df) , method = "forward" , )
+reg_summary = summary(regfit_fwd)
+
+## Plot RSS
+# 
+# plot(reg_summary$cp, scale = "Cp" , type='l')
+# plot(reg_summary$rss, scale = "rss", type='l')
+# plot(reg_summary$bic, scale = "bic", type='l')
+
+lowest = which.min(reg_summary$rss )
+plot(reg_summary$rss ,xlab='No. of Variables',ylab='RSS',type='l')
+points(lowest,reg_summary$rss[lowest],pch=19,col='red')
+best_ <- coef(regfit_fwd, lowest)
+tidy(best_)
+
+
+## Plot BIC 
+plot(reg_summary$bic,xlab='No. of Variables',ylab='BIC',type='l')
+lowest = which.min(reg_summary$bic)
+
+reg_summary$bic[lowest]
+
+points(lowest,reg_summary$bic[lowest],pch=19,col='red')
+
+## Get the coefficients at index
+best_ <- coef(regfit_fwd, lowest)
+tidy(best_)
+
+```
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+val.errors <- rep(NA, 15) 
+for (i in 1:15) {
+  coefi <- coef(regfit.best, id = i)
+  pred <- test.mat[, names(coefi)] %*% coefi
+  val.errors[i] <- mean((Hitters$Salary[test] - pred)^2)
+}
+
+min(val.errors)
+which.min(val.errors)
+```
+
+
+
+
+# --
+
+# Regression
+
+
+## Ridge Regression  
+
+**Definition**
+
+**code**
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+
+col =c(0,1,2,3,4,5)
+
+grid <- 10^col
+
+x_train = x[train, ]
+y_train = y[train]
+
+x_test = x[test , ]
+y_test =  y[test]
+
+ridge.mod <- glmnet( x_values, y_values, alpha = 0, lambda = grid )
+
+
+for (val in col) {
+  cat(paste0("---------- Ridge | ", 10^val , " lambda  -----------\n\n"))
+  
+   
+  ridge.pred <- predict(ridge.mod , s = 10^val, newx = x[train , ])
+  
+  cat(paste0( "         Training RMSE: ",
+    round(sqrt(mean (( ridge.pred - y_train)^2)), 4)
+    , "\n"
+  ))
+  
+  
+  ridge.pred <- predict(ridge.mod , s = 10^val, newx = x_test)
+  
+  cat(paste0( "         Test RMSE: ",
+    round(sqrt(mean (( ridge.pred - y_test)^2)), 4)
+  ))
+  cat("\n\n")
+}
+
+
+```
+
+$\lambda$ values correspond to the grid points 10, 30, 50, 70, 90?     
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+c <- c(10, 30, 50, 70, 90)
+count <- 0
+for (val in c) {
+  print(paste0("----------", val , " | lambda -----------"))
+  print(ridge.mod$lambda[val])
+}
+
+```
+
+$\ell_2$-norm of the coefficients corresponding to these values.  
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+c <- c(10, 30, 50, 70, 90)
+
+for (val in c) {
+  print(paste0("---------- ", val , " | l2 -----------"))
+  print(sqrt(sum(coef(ridge.mod)[-1, val]^2)))
+}
+```
+
+### Ridge CV
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+set.seed (1)
+## Run cross val with glmnet 
+# cv.out <- cv.glmnet(x[train , ], y[train], alpha = 0 , nfolds = 10)
+cv.out <- cv.glmnet(x[train , ], y[train], alpha = 0 , nfolds = length(y[train])) ## LOOCV
+
+## Plot ouput
+plot(cv.out)
+
+## Extract best model 
+bestlam <- cv.out$lambda.min
+print("--- Best Lambda ---")
+bestlam 
+
+## Make prediction for test set 
+ridge.pred <- predict(ridge.mod , s = bestlam , newx = x[test , ])
+## Calculate mean square error 
+print("------- MSE -------")
+mean (( ridge.pred - y.test)^2)
+
+```
+
+
+
+
+
+
+
+
+
+
+## Lasso Regression 
+
+**Definition**
+
+**code**
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+
+col =c(0,1,2,3,4,5)
+
+grid <- 10^col
+
+x_train = x[train, ]
+y_train = y[train]
+
+x_test = x[test , ]
+y_test =  y[test]
+
+lasso_mod <- glmnet(x_train , y_train  , alpha = 1, lambda = grid)
+ 
+
+for (val in col) {
+  cat(paste0("---------- lasso | ", 10^val , " lambda  -----------\n\n"))
+  
+  lasso.pred <- predict(lasso_mod , s = 10^val , newx = x_test)
+  
+  outcome <- coef(lasso_mod, s=10^val)
+
+
+  cat(paste0( "         Test RMSE: ",
+    round(sqrt(mean (( lasso.pred - y_test)^2)), 4)
+     ,"\n"
+  ))
+  ##                                                                      ## may need to replace value
+  cat(paste0("         " ,length(outcome[outcome[,1]!=0, ]) , " out of " , length(x[1,]) , " not zero" ))
+  cat("\n\n")
+}
+
+
+```
+
+ $\lambda$ values correspond to the grid points 10, 30, 50, 70, 90?     
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+c <- c(10, 30, 50, 70, 90)
+count <- 0
+for (val in c) {
+  print(paste0("----------", val , " | lambda -----------"))
+  print(lasso_mod$lambda[val])
+}
+
+```
+
+$\ell_2$-norm of the coefficients corresponding to these values.  
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+c <- c(10, 30, 50, 70, 90)
+
+for (val in c) {
+  print(paste0("---------- ", val , " | l2 -----------"))
+  print(sqrt(sum(coef(lasso_mod)[-1, val]^2)))
+}
+```
+
+
+### Lasso CV 
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+set.seed (1)
+# cv.out <- cv.glmnet(x[train , ], y[train], alpha = 1 , nfolds = 10)
+cv.out <- cv.glmnet(x[train , ], y[train], alpha = 1 , nfolds = length(y[train]))
+plot(cv.out)
+bestlam <- cv.out$lambda.min
+
+lasso.pred <- predict(lasso_mod , s = bestlam , newx = x[test , ])
+mean (( lasso.pred - y.test)^2)
+```
+
+
+## KNN Regression 
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+errors <-  seq(1:21)
+
+for (i in 1:21){
+  
+  Carseats.knn <- knn.reg(train = Carseats$Price, y = Carseats$Sales, k=i)
+  errors[i] <- Carseats.knn$PRESS
+}
+errors
+
+plot(errors)
+```
+
+
+
+
+
+
+
+
+
+# -- 
+
+# Splines
+
+
+
+## Polynomial Regreession 
+
+
+**Definition**
+
+**code**
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+
+grid <- seq(4,192 , 4)
+
+local_df = data.frame()
+df_fits = data.frame()
+
+# cat("Grid length: " , length(grid) , "\n")
+
+degrees <-  c(2,3,4,5)
+
+for (deg in degrees) {
+  fit <- lm(mpg ~ poly(horsepower , degree = deg), data = Auto76)
+  # print(summary(fit))
+  df_fits <-rbind(df_fits , tidy(anova(fit))[1,])
+  # cat(  "\n MSE for degree ", deg, " :"   , mse(fit))
+  y_pred <- predict(fit, data.frame(horsepower = grid))
+  local_df = rbind(local_df, cbind(deg , grid,  y_pred))
+}
+
+### Plot local_df
+plot <- local_df %>% 
+  ggplot(
+    aes( grid,  y_pred)
+  ) +
+  geom_point(aes(colour=as.factor(deg))) +
+  ## Data frame as input 
+ geom_jitter(data = Auto76,  aes(horsepower ,   mpg   ,  alpha = 0.5),  shape=1) +
+  geom_line(aes(group = as.factor(deg),
+                colour = as.factor(deg)))+
+  labs(
+    title= title  
+  )+
+  ylab("mpg") + xlab("horsepower") 
+
+
+plot
+
+## Outputs 
+df_fits
+
+```
+
+
+
+
+
+## NS Splines 
+
+**Definition**
+
+**code**
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+knots = c(60, 92, 116, 140, 164)
+
+grid <- seq(4, 192 , 4)
+local_df = data.frame()
+
+fit <- lm(mpg ~ bs(horsepower , knots = knots), data = Auto76)
+# print(summary(fit))
+
+# cat("\n MSE for degree ", knot, " :"   , mse(fit))
+y_pred <- predict(fit, data.frame(horsepower = grid))
+# df = rbind(df, cbind(knot , grid,  y_pred))
+
+title  <- "Regression spline with knots at horsepower\n60, 92, 116, 140, 164 5 on testing grid "
+plot = local_df %>%
+  ggplot(aes(grid , y_pred)) +
+  geom_jitter(aes(colour = as.factor("knot"))) +
+  geom_line(aes(colour = as.factor("knot"))) +
+  ## Replace variables 
+  geom_jitter(data = Auto76,  aes(horsepower ,   mpg   ,  alpha = 0.5),  shape=1)+
+  labs(
+    title= title  
+  ) +
+  ylab("mpg") + xlab("horsepower") 
+
+plot
+```
+
+
+
+
+## BS Spline 
+
+**Definition**
+
+**code**
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+knots = c(60, 92, 116, 140, 164)
+
+grid <- seq(4,192 , 4)
+local_df = data.frame()
+
+degs <- c(2, 3)
+for (deg in degs) {
+  fit <- lm(mpg ~ bs(horsepower , degree = deg , knots = knots), data = Auto76)
+  # print(summary(fit))
+  
+  cat(  "\n MSE for degree ", deg , " :"   , mse(fit))
+  y_pred <- predict(fit, data.frame(horsepower = grid))
+  local_df = rbind(local_df, cbind(deg , grid,  y_pred))
+}
+ 
+
+title  <- "Regression spline with knots at horsepower\n60, 92, 116, 140, 164 5 for degree 2 & 3 on testing grid "
+plot <- local_df %>%
+  ggplot(aes(grid , y_pred)) +
+  geom_jitter(aes(colour = as.factor(deg))) +
+  geom_jitter(data = Auto76,  aes(horsepower ,   mpg   ,  alpha = 0.5),  shape=1) +
+  geom_line(aes(group = as.factor(deg),
+                colour = as.factor(deg)))+
+  labs(
+    title= title  
+  )+
+  ylab("mpg") + xlab("horsepower") 
+
+
+plot
+```
+
+
+
+
+# kernel Smoothing 
+
+
+## Local Regression 
+
+**Definition**
+
+**code**
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+local_df = data.frame()
+
+## Values to loop through 
+vals = c(0.5, 1, 2, 4, 8, 16)
+grid <- seq(4,192 , 4)
+
+# Join the plots 
+par(mfrow = c(2, 3))
+
+for (val in vals) {
+  plot(
+    mpg ~ horsepower,
+    data = Auto76,
+    cex = 0.5,
+    col = "darkgrey" ,
+    main = paste0("Local Reg: val | " , val)
+  )
+  fit <- loess(mpg ~ horsepower, span = val, data = Auto76 , family = "gaussian")
+  
+  y_pred <- predict(fit, data.frame(horsepower = grid))
+  lines(grid,
+        y_pred,
+        col = "red",
+        lwd = 0.5)
+   y_pred <- predict(fit, data.frame(horsepower = grid))
+   
+  y_pred
+  
+  local_df = rbind(local_df, cbind( val , grid , y_pred ))
+}
+
+title  <- "Local regression for bandwidth at \n0.5, 1, 2, 4, 8, 16 on testing grid "
+plot = local_df %>% 
+  ggplot(
+    aes( grid , y_pred  )
+  ) +
+  geom_point(aes(colour=as.factor(val))) +
+  geom_jitter(data = Auto76,  aes(horsepower ,   mpg   ,  alpha = 0.5),  shape=1) +
+  geom_line(aes(group = as.factor(val),
+                colour = as.factor(val))) +
+  labs(
+    title= title  
+  )+
+  ylab("mpg") + xlab("horsepower") 
+
+
+plot
+```
+
+
+
+## Smoothing Spline 
+
+**Definition**
+**code**
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+grid <- seq(4,192 , 4)
+vals = seq(4, 32 , 2)
+local_df = data.frame()
+
+
+for (val in vals){
+  fit <- with(Auto76, smooth.spline(horsepower, mpg, df= val))
+  y_pred <- predict(fit, data.frame(horsepower = grid))
+  
+  local_df = rbind(local_df, cbind( val , grid , y_pred$y ))
+
+}
+
+title  <- "Smoothing splines for df values of\n4,6,...,32 on testing grid "
+plot = local_df %>% 
+  ggplot(
+    aes( grid , horsepower  )
+  ) +
+  geom_point(aes(colour=as.factor(val))) +
+  geom_point(data= Auto76,  aes(horsepower , mpg   ,   alpha = 0.1))+
+  geom_line(aes(group = as.factor(val),
+                colour = as.factor(val)))+
+  labs(
+    title= title  
+  )+
+  ylab("mpg") + xlab("horsepower") 
+
+
+plot
+
+```
+
+
+**code**with CV
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+grid <- seq(4, 192 , 4)
+vals = seq(4, 32 , 2)
+local_df = data.frame()
+
+
+
+fit <- with(Auto76, smooth.spline(horsepower, mpg, cv = TRUE))
+
+y_pred <- predict(fit, data.frame(horsepower = grid))
+
+local_df = rbind(local_df, cbind(grid , y_pred$y))
+
+val = fit$local_df
+
+title  <- "Smoothing splines with cv"
+plot = local_df %>%
+  ggplot(aes(grid , horsepower)) +
+  geom_point(aes(colour = as.factor(val))) +
+  geom_jitter(data = Auto76,
+              aes(horsepower ,   mpg   ,  alpha = 0.5),
+              shape = 1) +
+  geom_line(aes(group = as.factor(val),
+                colour = as.factor(val))) +
+  labs(title = title)+
+  ylab("mpg") + xlab("horsepower") 
+
+
+plot
+localise_plot(plot, title)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#--
+
+# Clustering 
+
+## K-mean Clustering 
+
+**Definition**
+
+**code**
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+km.out <- kmeans(x, 2, nstart=20)
+
+# km.out$cluster
+# km.out$size
+
+plot(x, col=(km.out$cluster+1), main="K-Means Clustering Results with K=2", 
+     xlab="", ylab="", pch=20, cex=2)
+
+```
+
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+x <- matrix(rnorm(100 * 2), ncol = 2)
+x[1:100, 1] <- x[1:100, 1] + 3
+x[1:100, 2] <- x[1:100, 2] - 4
+
+
+i = 2
+while (i < 6) {
+  km.out <- kmeans(x, i, nstart = 20)
+  plot(
+    x,
+    col = (km.out$cluster + 1),
+    main = "K-Means Clustering Results with K=2",
+    xlab = "",
+    ylab = "",
+    pch = 20,
+    cex = 2
+  )
+  i = i + 1
+}
+```
+
+get best model 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+    x <- matrix(rnorm(100 * 2), ncol = 2)
+    x[1:100, 1] <- x[1:100, 1] + 3
+    x[1:100, 2] <- x[1:100, 2] - 4
+
+ks = c(4,5,6)
+for( k in ks){
+  
+  best_ss = 9999999999
+  best_model = NULL
+  i = 0
+  best_x = NULL
+  while (i < 20) {
+    km.out <- kmeans(x, k, nstart = 10)
+    
+    
+    if(km.out$totss < best_ss){
+      best_ss = km.out$totss
+      best_model <- km.out
+      best_x = x
+    }
+    i = i + 1
+  }
+  
+  cat("\n\n---------- " , k , " -----------\n")
+  cat("best ss: " , best_ss , "\n")
+  cat("best within cluster: " ,best_model$tot.withinss)
+  plot(
+      best_x,
+      col = (best_model$cluster + 1),
+      main = paste0("K-Means Clustering Results with K=", k),
+      xlab = "",
+      ylab = "",
+      pch = 20,
+      cex = 2
+    )
+}
+```
+### Multiple vars
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+km.out <- kmeans(x, 2, nstart=20)
+
+km.out$cluster
+km.out$size
+
+plot(x[,1],x[,2] ,col=(km.out$cluster+1), main="K-Means Clustering Results with K=2", 
+     xlab="", ylab="", pch=20, cex=2)
+plot(x[,1],x[,3] ,col=(km.out$cluster+1), main="K-Means Clustering Results with K=2", 
+     xlab="", ylab="", pch=20, cex=2)
+```
+
+
+
+### Plotting metrics 
+
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+twc <- data.frame()
+
+k = 2
+while (k < 7) {
+  
+  km.out <- kmeans(auto_scaled, k, iter.max = 20)
+  twc <- rbind(twc , c(k , km.out$tot.withinss))
+
+  k = k + 1
+}
+colnames(twc) <- c("k", "total_Within_cluster_variabilities")
+
+
+ 
+twc %>% 
+  ggplot(
+    aes( k ,total_Within_cluster_variabilities )
+  ) +
+  geom_point() + 
+  geom_line()+
+  labs(
+    title= "K value against total Within cluster variability"
+  )
+
+```
+
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+twc <- data.frame()
+
+k = 2
+while (k < 7) {
+  
+  km.out <- kmeans(auto_scaled, k, iter.max = 20)
+  twc <- rbind(twc , c(k , km.out$betweenss))
+
+  k = k + 1
+}
+colnames(twc) <- c("k", "total_between_cluster_variabilities")
+
+
+ 
+twc %>% 
+  ggplot(
+    aes( k ,total_between_cluster_variabilities )
+  ) +
+  geom_point() + 
+  geom_line()+
+  labs(
+    title= "K value against total Within cluster variability"
+  )
+```
+
+
+
+## Hierarchical Clustering 
+
+**Definition**
+
+**code**
+
+## Complete 
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+
+clust_k <-  9
+
+
+d <- dist(auto_scaled, method="euclidean") ## be sure to scale data 
+
+# pfit <- hclust(d, method="single") 
+pfit <- hclust(d, method="complete") # perform hierarchical clustering
+
+
+# Plot the obtained dendrogram
+plot(pfit, cex = 0.6, hang = -1)
+
+
+# model <- hclust(dist(d), "ave")
+dhc <- as.dendrogram(pfit)
+
+dend <- as.dendrogram(pfit)
+dend_data <- dendro_data(dend, type = "rectangle")
+
+
+```
+
+
+
+## Cluster table 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+## Creates cluster table from output of the H-cluster analysis & the number of clusters to test for 
+cluster_table <- function(hclust , n_clust)
+{
+  df  <- data.frame()
+  for (k in seq(1, n_clust)) {
+    # Cut tree into 4 groups
+    cluster_groups <- cutree(hclust, k = k)
+    
+    n <- as.data.frame(cluster_groups) %>%
+      group_by(cluster_groups) %>%
+      count() %>% pull(n)
+    
+    n_vec <- c(n ,  rep(0 , times = (n_clust - k)))
+    df <- rbind(df , n_vec)
+    
+  }
+  
+  # transpose dataframe
+  df <- as.data.frame(t(df))
+  colnames(df) <- seq(1, n_clust)
+  rownames(df) <- seq(1, n_clust)
+  
+  return(df)
+  
+}
+
+cluster_table( pfit , 9)
+```
+
+
+
+# -- 
+
+
+
+# Multiple Testing 
+
+**Definition**
+
+**code**
+
+2x2 table similar to 13.2. At $\alpha = 0.05$ 
+```{r, echo=FALSE,message=FALSE,  warning=FALSE}
+
+p.values <- rep(0, 100)
+for (i in 1:100)
+  p.values[i] <- t.test(x[, i], mu = 0)$p.value
+
+decision <- rep("Do not reject H0", 100)
+decision[p.values <= .05] <- "Reject H0"
+
+
+table(decision ,
+      c(rep("H0 is False", 50), rep("H0 is True", 50)))
+
+```
+
+
+
+random mu values plot false discovery rate 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+# multiply error rate by number of trials & display them  in a ggplot 
+m <- 1:500
+fwe1 <- 1 - (1 - 0.05)^m
+fwe2 <- 1 - (1 - 0.01)^m
+fwe3 <- 1 - (1 - 0.001)^m
+
+
+
+par(mfrow = c(1, 1))
+
+ plot(m, fwe1 , type = "l", log = "x", ylim = c(0, 1), col = 2,ylab = "Family - Wise Error Rate",
+xlab = "Number of Hypotheses")
+ lines(m, fwe2 , col = 4)
+ lines(m, fwe3 , col = 3)
+ abline(h = 0.05, lty = 2)
+```
+
+calculating the m value 
+
+// inverting the power of value with log 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+log(0.95, base=(1 - 0.05))
+log(0.95, base=(1 - 0.01))
+log(0.95, base=(1 - 0.001))
+
+
+```
+
+
+adjust the p-values 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+
+# p.adjusted <- p.adjust(p.values, method = "bonferroni", n = length(p.values))
+# 
+# p.values
+# p.adjusted
+
+
+p.adjusted <- p.adjust(p.values, method = "holm")
+
+p.values
+p.adjusted
+
+```
+
+use data, run test, get pvalue, add to output 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+data("Fund")
+
+alpha = 0.05
+count = 100
+
+library(ISLR2)
+fund.mini <- Fund[, 1:count]
+# t.test(fund.mini[, 1], mu = 0)
+
+ fund.pvalue <- rep(0, count)
+ for (i in 1:count)
+   fund.pvalue[i] <- t.test(fund.mini[, i], mu = 0)$p.value
+
+ 
+ 
+ 
+ decision <- rep("Do not reject H0", count)
+decision[fund.pvalue <= .05] <- "Reject H0"
+
+
+table(decision ,
+c(rep("H0 is False", count/2), rep("H0 is True", count/2))
+)
+
+sum( fund.pvalue > alpha  )  / count
+
+
+```
+
+
+plot p-values and add alpha line 
+```{r, echo=FALSE, results='hide', message=FALSE,  warning=FALSE}
+fund.pvalue
+
+# mean(fund.pvalue)
+
+plot(x=1 :count , y= sort(fund.pvalue))
+ abline(h = 0.05, lty = 2)
+```
+
+
+
+
+
+
+
+
+# -- 
+
+# Theory
+
+
+## Errors 
+
+
+**Type 1 error (false positive)**  
+- Where you incorrectly reject the null hypothesis  
+- In binary classification, where you predict the class to be false and the label is true. 
+
+**Type 2 error (false negative)**  
+- Where you mistakenly accept the null hypothesis when it should haven rejected.  
+- In binary classification, where you predict the class to be true and the label is false.  
+
+
+
+### Examples 
+
+**Type 1 (False Positive)**
+
+In medical screening using a cheap method, if there was a high type 2 error then many people would be told they are fine when in fact they have a disease. An example of this is the use of computer vision in skin cancer detection. One of the major issues is the number of people that need to be screened. This is overwhelming medical practitioners who are therefore more likely to make mistakes. However, these algorithms can reduce the burden by filtering out many and ensuring that there are more false positives who are then are referred to medical specialists who very good at correctly classifying skin cancer. 
+
+**Type 2 (False Negative)**
+
+In law, the outcome of classification, ethically speaking, is worse to convict an innocent person of a crime than to acquit a criminal. This is a classification problem and as such, the process (ideally) are setup to minimize the type 1 error in favour of an increased type 2 error. 
+
+
+## Measures 
+
+
+**Accuracy** 
+
+How well the model fits the outcome. 
+
+
+**Sensitivity & Recall**
+
+How much were correctly identified as positive to how much were actually positive.
+
+$Sensitivity = TP / FN+TP$
+
+$Recall = TP / FN+TP$
+
+
+**Specificity**
+
+The ratio between how much were correctly classified as negative to how much was actually negative.
+
+$Specificity = TN/FP+TN$
+
+
+**Precision**
+
+Proportion correctly classified as positive out of all positives
+$Precision = TP/TP+FP$
+
+
+In most classification models, there is a threshed value that can be tweaked to control the model's tolerance for type one or type two errors as a trade off (increasing the tolerance for one, reduces the tolerance of the other). Therefore, depending on the context of the analysis, one can be referenced over another. 
+
+
+### False Positive rate
+The fraction of negative samples that are classified as positive
+$FP/(TN + FP)$
+
+### False negative rate: 
+The fraction of positive samples that are classified as negative
+
+$FN/(FN + TP)$
+
+## Bias Variance trade-off 
+
+
+Bias
+	- The para of the generalization error that is due to wrong assumptions (linear when the data is quadratic.
+	- A high bias model tends to give underfitting problem 
+Variance 
+	- The part of the generalization error that is due to models excessive sensitivity in training data. 
+	- A high variance model tends to give overfitting problem 
+
+Irreducible error
+	- Part that is due to noisiness of the data
+
+Increasing model complexity will typically increase its variance and reduce its bias 
+Reducing a model complexity increases its bias and reduces its variance  
+
+
+## Regularization
+To reduce overfitting is to regularize the model (i.e., to constrain it): the fewer degrees of freedom it has, the harder it will be for it to overfit the data. 
+
+For example, a simple way to regularize a polynomial model is to reduce the number of polynomial degrees
+
+Ridge Regression 
+Forces the learning algorithm to not only fit the data but also keep the model weights as small as possible. 
+This is only applied to the cost function during training time. 
+
+
+## Reducable & irreducible error 
+
+Reducible errors: These errors can be reduced by making certain improvements to the model
+Irreducible errors: These errors cannot be reduced at all - variation from the environment 
+
+
+
+
+## Training Error 
+
+The test error is the average error that results from using a statistical learning method to predict the response on a new observation, one that was not used in training the method.
+
+The training error is calculated by applying the statistical learning method to the observations used in its training.
+
+The training error (rate) is often substantially dierent from the test error (rate), and the former can dramatically
+underestimate the latter.
+
+
+## Selecting Predictors for regression 
+
+
+There are many difierent approaches to finding `good' predictors
+for regression:
+ subset or best subset selection { based on training error and
+model size;
+ forward selection { starts with no predictor and chooses
+sequentially;
+ backward selection { starts with the full model and drops
+predictor;
+ penalty criterion based selection.
+
+
+
+
+## Interpreting interaction terms 
+
+The results in this table suggests that interactions are
+important.
+ The p-value for the interaction term TV  radio is extremely
+low, indicating that there is strong evidence for HA : 3 6= 0.
+ The R2 for the interaction model is 96:8%, compared to only
+89:7% for the model that predicts sales using TV and radio
+without an interaction term.
+
+ This means that (96:8 􀀀 89:7)=(100 􀀀 89:7) = 69% of the
+variability in sales that remains after tting the additive
+model has been explained by the interaction term.
+ The coecient estimates suggest that an increase in TV
+advertising of $1,000 is associated with increased sales of
+( ^ 1 + ^ 3  radio)  1000 = 19 + 1:1  radio units.
+ An increase in radio advertising of $1,000 will be associated
+with an increase in sales of
+( ^ 2 + ^ 3  TV)  1000 = 29 + 1:1  TV units.
+
+
+
+## Clustering comparison pg:309
+
+## Hierarchical Clustering 
+
+
+Complete 
+Maximal inter-cluster dissimilarity. Compute all pairwise dissimilarities between the observations in cluster A and the observations in cluster B, and record the largest of these dissimilarities.
+
+Single 
+Minimal inter-cluster dissimilarity. Compute all pairwise dissimilarities between the observations in cluster A and the observations in cluster B, and record the smallest of these dissimilarities. Single linkage can result in extended, trailing clusters in which single observations are fused one-at-a-time.
+
+Average 
+Mean inter-cluster dissimilarity. Compute all pairwise dissimilarities between the observations in cluster A and the observations in cluster B, and record the average of these dissimilarities.
+
+
+Centroid
+Dissimilarity between the centroid for cluster A (a mean vector of length p) and the centroid for cluster B. Centroid linkage can result in undesirable inversions.
+
+
+## Confusion matrix 
+
+```
+          Reference
+Prediction True False 
+    True    True Pos   False Pos 
+    False   False Neg  True Neg 
+   
+```
+
+

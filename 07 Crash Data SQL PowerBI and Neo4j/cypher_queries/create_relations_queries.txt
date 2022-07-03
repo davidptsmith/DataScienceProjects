@@ -1,0 +1,72 @@
+// Create Relationships Functions 
+
+// Create relationships between Crash and Date
+LOAD CSV WITH HEADERS FROM 'file:///Crash.csv' AS row
+MATCH (crash:Crash { event_id: row.event_id })
+MATCH (date:Date  { date_id: row.date_id })
+MERGE (crash)-[:ON]->(date);
+
+
+// Create relationships between Crash and EventType
+LOAD CSV WITH HEADERS FROM 'file:///Crash.csv' AS row
+MATCH (crash:Crash { event_id: row.event_id })
+MATCH (eventtype:EventType  { event_type: row.event_type })
+MERGE (crash)-[:WAS]->(eventtype);
+
+
+// Create relationships between Crash and EventNature
+LOAD CSV WITH HEADERS FROM 'file:///Crash.csv' AS row
+MATCH (crash:Crash { event_id: row.event_id })
+MATCH (eventnature:EventNature  { event_nature: row.event_nature })
+MERGE (crash)-[:WAS]->(eventnature);
+
+
+// Create relationships between Crash and Severity
+LOAD CSV WITH HEADERS FROM 'file:///Crash.csv' AS row
+MATCH (crash:Crash { event_id: row.event_id })
+MATCH (severity:Severity  { severity: row.severity })
+MERGE (crash)-[:WAS]->(severity);
+
+
+// Create relationships between Crash and LGA
+LOAD CSV WITH HEADERS FROM 'file:///Crash.csv' AS row
+MATCH (crash:Crash { event_id: row.event_id })
+MATCH (lga:LGA  { lga_id: row.lga_id })
+MERGE (crash)-[:IN]->(lga);
+
+
+// Create relationships between Crash and Road
+LOAD CSV WITH HEADERS FROM 'file:///Crash.csv' AS row
+MATCH (crash:Crash { event_id: row.event_id })
+MATCH (road:Road  { road_id: row.road_id })
+MERGE (crash)-[:ON]->(road);
+
+
+// Create relationships between Crash and WeatherReading
+LOAD CSV WITH HEADERS FROM 'file:///Crash.csv' AS row
+MATCH (crash:Crash { event_id: row.event_id })
+MATCH (weatherreading:WeatherReading  { weather_id: row.weather_id })
+MERGE (crash)-[:READING]->(weatherreading);
+
+
+// Create relationships between LGA and Region
+LOAD CSV WITH HEADERS FROM 'file:///LGA.csv' AS row
+MATCH (lga:LGA { lga_id: row.lga_id })
+MATCH (region:Region  { region_id: row.region_id })
+MERGE (lga)-[:inside]->(region);
+
+
+// Create relationships between WeatherReading and Date
+LOAD CSV WITH HEADERS FROM 'file:///WeatherReading.csv' AS row
+MATCH (weatherreading:WeatherReading { weather_id: row.weather_id })
+MATCH (date:Date  { date_id: row.date_id })
+MERGE (weatherreading)-[:ON]->(date);
+
+
+// Create relationships between WeatherReading and WeatherStn
+LOAD CSV WITH HEADERS FROM 'file:///WeatherReading.csv' AS row
+MATCH (weatherreading:WeatherReading { weather_id: row.weather_id })
+MATCH (weatherstn:WeatherStn  { station_id: row.station_id })
+MERGE (weatherreading)-[:FROM]->(weatherstn);
+
+

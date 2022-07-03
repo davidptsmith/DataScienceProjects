@@ -1,0 +1,114 @@
+// How many crashes are of a given crash type in a specified local government? 
+   
+    MATCH (s:Severity)<-[:WAS]-(n:Crash)-[:IN]->(p:LGA {local_gov_name: "Belmont (C)"})
+    RETURN s.severity AS severity, COUNT(*) AS Crashes;
+
+
+// Find crashes that share the same crash type. 
+
+    MATCH (n:Crash)-[r:WAS]->(p:EventType {event_type: "Involving Overtaking"})
+    RETURN n, r, p
+
+
+// Counting number of crash types 
+
+    MATCH (n:Crash)
+    RETURN n.event_type AS event_type, COUNT(*) AS Crashes;
+
+
+// Find all different crash types for each local governments. 
+
+    MATCH (lga:LGA)<-[:IN]-(c:Crash)-[:WAS]->(t:EventType)
+    RETURN lga.local_gov_name as LGA ,  t.event_type as type, count(*) as Crashes 
+    ORDER BY Crashes DESC
+
+
+// Find crashes based on the presence of a cyclist.  
+
+    MATCH (n:Crash )
+    WHERE n.total_bike_involved > 0
+    RETURN n
+
+
+// Find crashes posted during a specified period of time (2017-2019).  
+
+    MATCH (n:Crash)-[r:ON]->(d:Date)
+    WHERE 2016< d.year < 2019
+    WITH d.year + "-" + d.month as date_value , n
+    RETURN distinct(date_value) as Date, count(n) as Crashes ORDER BY Date
+
+   
+// Count By Month  
+
+    MATCH (n:Crash)-[r:ON]->(d:Date)
+    RETURN distinct(d.month) as Month, count(n) as Crashes ORDER BY Month
+
+// What local government region has the most Major crashes?  
+
+    MATCH (s:Severity {severity: "PDO Major"})<-[:WAS]-(n:Crash)-[:IN]->(p:LGA)
+    RETURN p.local_gov_name as LGA, COUNT(*) AS FatalCrashes
+    ORDER BY FatalCrashes DESC
+    limit 5;
+
+// How many crashes occurred on rainy days?  
+
+    MATCH (n:Crash)-[r:READING]->(w:WeatherReading)
+    WHERE w.precipitation_mm > 0
+    RETURN count(n) as number_of_crashes
+
+    // Return those days & crashes 
+
+    MATCH (n:Crash)-[r:READING]->(w:WeatherReading)
+    WHERE w.precipitation_mm > 0
+    RETURN n, r, w
+
+// Number of crashes by Severity for each year. 
+
+     MATCH (s:Severity)<-[:WAS]-(n:Crash)-[r:ON]->(d:Date)
+     RETURN distinct(d.year) as Date, s.severity as sev, count(n) as Crashes 
+     ORDER BY Date
+
+// Number of crashes of an event type (Involving Overtaking) for each severity  
+
+    MATCH (s:Severity)<-[:WAS]-(n:Crash)-[:WAS]->(p:EventType {event_type: "Involving Overtaking"})
+    RETURN s.severity AS severity, COUNT(*) AS num_crashes;
+
+
+// How many pedestrians were involving in crashes by LGA? 
+
+     MATCH (n:Crash)-[r:IN]->(l:LGA)
+     WHERE n.total_pedestrians_involve > 0
+     RETURN l.local_gov_name as local_gov , sum(n.total_pedestrians_involve) as number_of_crashes_involving_pedestrians
+     ORDER BY number_of_crashes_involving_pedestrians DESC
+     LIMIT 5;
+
+
+// How many Vehicles, bikes, Trucks, & pedestrians were involved in accidents by 10 local governments with the hights total number of crashes 
+
+    MATCH (n:Crash)-[:IN]->(lga:LGA)
+    RETURN lga.local_gov_name as LGA ,  
+           sum(n.total_other_vehicles_involved) as total_other_vehicles , 
+           sum(n.total_heavy_truck_involved) as total_heavy_trucks, 
+           sum(n.total_bike_involved) as total_bikes, 
+           sum(n.total_motor_cycle_involved) as total_motor_cycles,
+           sum(n.total_pedestrians_involve) as total_pedestrians,
+           sum(n.total_other_vehicles_involved + 
+               n.total_heavy_truck_involved + 
+               n.total_bike_involved + 
+               n.total_motor_cycle_involved + 
+               n.total_pedestrians_involve) as Total
+    ORDER BY Total DESC
+    Limit 5
+
+
+// Find the 10 closest accidents to the Perth Weather Stn that occurred on rainy days  
+
+    MATCH  (r:WeatherReading)<-[:READING]-(c:Crash)  OPTIONAL MATCH (stn:WeatherStn {station_name: "Mandurah"})
+    Where r.precipitation_mm > 0
+    WITH c ,
+      point({latitude:stn.latitude, longitude:stn.longitude}) AS p1,
+      point({latitude:c.latitude, longitude:c.longitude}) AS p2
+    RETURN c
+    ORDER BY  toInteger(point.distance(p1, p2)/1000) 
+    Limit 10
+  

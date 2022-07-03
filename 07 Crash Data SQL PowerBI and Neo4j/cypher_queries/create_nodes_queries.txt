@@ -1,0 +1,59 @@
+// Create Nodes Functions
+
+// Create Crash
+LOAD CSV WITH HEADERS FROM 'file:///Crash.csv' AS row
+MERGE (n:Crash { event_id: row.event_id })
+ON CREATE SET n.event_nature = row.event_nature,  n.event_type = row.event_type,  n.severity = row.severity,  n.longitude = toFloat(row.longitude),  n.latitude = toFloat(row.latitude),  n.total_bike_involved = toInteger(row.total_bike_involved),  n.total_truck_involved = toInteger(row.total_truck_involved),  n.total_heavy_truck_involved = toInteger(row.total_heavy_truck_involved),  n.total_motor_cycle_involved = toInteger(row.total_motor_cycle_involved),  n.total_other_vehicles_involved = toInteger(row.total_other_vehicles_involved),  n.total_pedestrians_involve = toInteger(row.total_pedestrians_involve);
+
+
+// Create Date
+LOAD CSV WITH HEADERS FROM 'file:///Date.csv' AS row
+MERGE (n:Date { date_id: row.date_id })
+ON CREATE SET n.year = toInteger(row.year),  n.month = row.month,  n.day = row.day,  n.quarter = toInteger(row.quarter),  n.day_of_week = row.day_of_week;
+
+
+// Create WeatherStn
+LOAD CSV WITH HEADERS FROM 'file:///WeatherStn.csv' AS row
+MERGE (n:WeatherStn { station_id: row.station_id })
+ON CREATE SET n.station_name = row.station_name,  n.country = row.country,  n.region = row.region,  n.elevation = toInteger(row.elevation),  n.daily_start_date = row.daily_start_date,  n.daily_end_date = row.daily_end_date,  n.longitude = toFloat(row.longitude),  n.latitude = toFloat(row.latitude);
+
+
+// Create Road
+LOAD CSV WITH HEADERS FROM 'file:///Road.csv' AS row
+MERGE (n:Road { road_id: row.road_id })
+ON CREATE SET n.road_name = row.road_name,  n.common_road_name = row.common_road_name,  n.cway = row.cway,  n.speed_limit = row.speed_limit,  n.network_type = row.network_type;
+
+
+// Create LGA
+LOAD CSV WITH HEADERS FROM 'file:///LGA.csv' AS row
+MERGE (n:LGA { lga_id: row.lga_id })
+ON CREATE SET n.local_gov_name = row.local_gov_name;
+
+
+// Create Region
+LOAD CSV WITH HEADERS FROM 'file:///Region.csv' AS row
+MERGE (n:Region { region_id: row.region_id })
+ON CREATE SET n.region_name = row.region_name;
+
+
+// Create WeatherReading
+LOAD CSV WITH HEADERS FROM 'file:///WeatherReading.csv' AS row
+MERGE (n:WeatherReading { weather_id: row.weather_id })
+ON CREATE SET n.temp_min = toFloat(row.temp_min),  n.temp_ave = toFloat(row.temp_ave),  n.temp_max = toFloat(row.temp_max),  n.precipitation_mm = toFloat(row.precipitation_mm),  n.wind_direction = toFloat(row.wind_direction),  n.wind_speed = toFloat(row.wind_speed),  n.pressure = toFloat(row.pressure),  n.distance = toInteger(row.distance);
+
+
+// Create EventType
+LOAD CSV WITH HEADERS FROM 'file:///EventType.csv' AS row
+MERGE (n:EventType { event_type: row.event_type });
+
+
+// Create EventNature
+LOAD CSV WITH HEADERS FROM 'file:///EventNature.csv' AS row
+MERGE (n:EventNature { event_nature: row.event_nature });
+
+
+// Create Severity
+LOAD CSV WITH HEADERS FROM 'file:///Severity.csv' AS row
+MERGE (n:Severity { severity: row.severity });
+
+
