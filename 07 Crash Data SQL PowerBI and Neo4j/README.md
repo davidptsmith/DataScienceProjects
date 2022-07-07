@@ -48,7 +48,7 @@ If you use the python code for ingesting the data to SQL you open youself up to 
 ![image](https://user-images.githubusercontent.com/76982323/177720561-be38486a-c82f-4702-b583-82a937b0033d.png)
 
 
----
+<br/>
 
 # Graph Database with Neo4j 
 
