@@ -3,6 +3,9 @@
 This trigger warning for anyone who may be personally affected by this topic - specific details of attacks are not explicitly discussed however summaries of events are provided as well as other statistics
 
 <br/>
+
+---
+
 <br/>
 
 # Global Terrorism Database 
@@ -16,6 +19,7 @@ Please feel free to explore the R notebooks and the outcomes, however note that 
 
 
 --- 
+<br/>
 
 # Introduction
 
