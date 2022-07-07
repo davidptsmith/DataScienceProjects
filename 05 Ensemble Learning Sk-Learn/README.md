@@ -87,9 +87,11 @@ Repeat the training and prediction processes above on the reduced-dimensional da
 
 
 ## Bagged Regressor 
-
+Models with high variance include decision trees. It implies that a small modification to the training set of data will result in a completely different model. Typically, decision trees overfit. Using the ensemble approach known as bagging, this problem may be solved. Bagging means Bootstrap Aggregation.
+Bagging refers to creating different models using a sample of the data, then aggregating the predictions from each model to lower variance.
 
 ## Comparison  
+![image](https://user-images.githubusercontent.com/76982323/177714024-b04fb6a8-b417-4269-9bba-980697f807f7.png)
 
 ![image](https://user-images.githubusercontent.com/76982323/177713677-4dd31a8a-4c2c-4b0c-b08c-feb412b34b36.png)
 ![image](https://user-images.githubusercontent.com/76982323/177713732-efbf8049-2e22-4374-88c0-cbe0662f3ebc.png)
