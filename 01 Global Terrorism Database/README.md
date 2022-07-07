@@ -14,7 +14,9 @@ Please feel free to explore the R notebooks and the outcomes, however note that 
  
 
 <br/>
+
 --- 
+
 <br/>
 
 # Introduction
