@@ -23,6 +23,7 @@ Here the testing set is quite large at approximately 38% of the total number of 
 
 In the plot below we see that the classes are not balanced which may cause issues in classification tasks. As such, stratified sampling may need to be used to ensure that samples are representative. With class 's' ('Sugi' forest) representing 42% of all data and class 'd'('Mixed deciduous' forest) representing 32%, and the 'o' ('Other' non-forest land) and 'h' ('Hinoki' forest) at 14% and 12% respectively, it might be useful to combine classes when modeling. This will depend however on what the goals of process are. However, given the data is mapping the spectral characteristics at visible-to-near infrared wavelengths, using ASTER satellite imagery to identify and/or quantify the ecosystem services provided by each forrest type, this may not be appropriate. 
 
+![image](https://user-images.githubusercontent.com/76982323/177717213-1ad51217-a84f-4dd7-953f-1f5d56a4dc0e.png)
 
 
 ## Support Vector Machine Classifier implemented in the sklearn.svm.SVC class to perform multiclass classification using the one-versus-one strategy. 
@@ -120,6 +121,7 @@ weighted avg       0.91      0.91      0.91       325
 
 ```
 
+![image](https://user-images.githubusercontent.com/76982323/177717272-e38f5d79-e6d9-4e87-89f9-3e0f98ed5124.png)
 
 
 
@@ -188,6 +190,10 @@ weighted avg       0.87      0.86      0.86       325
 
 
 ```
+
+![image](https://user-images.githubusercontent.com/76982323/177717330-7d7f3e78-60ed-436b-933e-2b146d87b09e.png)
+
+
 
 ## Compare the performances of the two classifiers and give a brief discussion about your experimental results.
 > *You should show the confusion matrices and accuracies of the two classifiers for the testing set.*
