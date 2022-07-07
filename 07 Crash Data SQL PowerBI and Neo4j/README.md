@@ -39,6 +39,7 @@ If you use the python code for ingesting the data to SQL you open youself up to 
 
 ![image](https://user-images.githubusercontent.com/76982323/177720029-624eadb1-2cc7-4f95-b562-e33426684e49.png)
 
+
 ## Region 
 ![image](https://user-images.githubusercontent.com/76982323/177719962-443e6883-5f75-4041-be1e-057bfe8836b3.png)
 
