@@ -56,7 +56,7 @@ Stochastic gradient descent with learning rate and momentum as trainable hyperpa
 
 ### Hyperparameter 
 
-NOTE: 
+**NOTE:** 
 
 For runtime speed, the hyperparameters are tuned using a random grid search through the supplied variables. However, the function allows for a full, exhaustive grid search to be performed if required by passing the argument True to the function. 
 
@@ -148,7 +148,7 @@ Stochastic gradient descent with learning rate and momentum set from MLP trainin
 
 ### Hyperparameter 
 
-NOTE: 
+**NOTE:** 
 
 For runtime speed, the hyperparameters are tuned using a random grid search through the supplied variables. However, the function allows for a full, exhaustive grid search to be performed if required by passing the argument True to the function. 
 
@@ -234,7 +234,7 @@ Stochastic gradient descent with learning rate and momentum set from MLP trainin
 
 ### Hyperparameter 
 
-NOTE: 
+**NOTE:** 
 
 For runtime speed, the hyperparameters are tuned using a random grid search through the supplied variables. However, the function allows for a full, exhaustive grid search to be performed if required by passing the argument True to the function. 
 
