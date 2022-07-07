@@ -1,7 +1,11 @@
 # ETL to SQL Server with Python 
-![Artboard 7@4x](https://user-images.githubusercontent.com/76982323/177718248-419bc322-296a-4bbe-aeea-beb384ce6ed2.png)
 
 ![ETL@4x](https://user-images.githubusercontent.com/76982323/177718282-72433c99-e415-45d5-8de3-2181540e1a3f.png)
+
+![Artboard 7@4x](https://user-images.githubusercontent.com/76982323/177718248-419bc322-296a-4bbe-aeea-beb384ce6ed2.png)
+
+## SQL Database Design 
+
 
 ![Dimension Schemas copy@4x](https://user-images.githubusercontent.com/76982323/177718297-0be1693b-457b-484a-b182-58d710e4b35a.png)
 
