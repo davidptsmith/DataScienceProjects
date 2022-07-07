@@ -13,7 +13,7 @@ The data was so interesting and truly saddening, however it opened me up to a lo
 Please feel free to explore the R notebooks and the outcomes, however note that the data set has significant bias and the modeling is not reliable but completed for the purpose of the assignment. 
  
 
-
+<br/>
 --- 
 <br/>
 
