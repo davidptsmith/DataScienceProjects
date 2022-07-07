@@ -2,11 +2,14 @@
 
 This trigger warning for anyone who may be personally affected by this topic - specific details of attacks are not explicitly discussed however summaries of events are provided as well as other statistics
 
-
+<br/>
+<br/>
 
 # Global Terrorism Database 
 
 This was a university project where we had to explore a dataset and then look at creating models. I worked with a friend and colleague studying Violent Extremism who asked if I could help him explore questions form the Global Terrorism Databases Global Terrorism Database (GTD) collated and maintained by the START institute in the United States. 
+
+
 The data was so interesting and truly saddening, however it opened me up to a lot of history that I had never known about. 
 Please feel free to explore the R notebooks and the outcomes, however note that the data set has significant bias and the modeling is not reliable but completed for the purpose of the assignment. 
  
