@@ -1,5 +1,3 @@
-Check out the project github here https://github.com/gabrielnge/IoTPetPal
-
 # IoT Pet Pal Presentation
 
 
@@ -33,3 +31,6 @@ Check out the project github here https://github.com/gabrielnge/IoTPetPal
 ![IoT Pet Pal_Group6_Page_28](https://user-images.githubusercontent.com/76982323/177684291-73b672b9-d19e-4046-9947-67fe95b89d9b.jpg)
 ![IoT Pet Pal_Group6_Page_29](https://user-images.githubusercontent.com/76982323/177684294-33fa4166-f287-4dcc-98de-9e731f61a140.jpg)
 ![IoT Pet Pal_Group6_Page_30](https://user-images.githubusercontent.com/76982323/177684297-2ff4fe54-fd94-49a0-91c6-ddb21f5244c3.jpg)
+
+
+Check out the project github here https://github.com/gabrielnge/IoTPetPal
