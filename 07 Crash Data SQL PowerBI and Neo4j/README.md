@@ -37,26 +37,25 @@ If you use the python code for ingesting the data to SQL you open youself up to 
 
 ![image](https://user-images.githubusercontent.com/76982323/177719867-aa9957ef-5eda-4451-b190-b5fc94bb0b26.png)
 
-![image](https://user-images.githubusercontent.com/76982323/177720029-624eadb1-2cc7-4f95-b562-e33426684e49.png)
-
-
-## Region 
 ![image](https://user-images.githubusercontent.com/76982323/177719962-443e6883-5f75-4041-be1e-057bfe8836b3.png)
 
+## Region 
+
+![image](https://user-images.githubusercontent.com/76982323/177720029-624eadb1-2cc7-4f95-b562-e33426684e49.png)
 
 ## Precipitation 
 
 ![image](https://user-images.githubusercontent.com/76982323/177720561-be38486a-c82f-4702-b583-82a937b0033d.png)
 
 
+---
+
 # Graph Database with Neo4j 
 
 A set of python functions were created to handle the ingesting the data to Neo4j and creating relationships. See the notebook for the details of the functions. 
 
 
-# Neo4j CSV Files
-
-
+## Neo4j CSV Files
 
 Create a set of neo4j csv files from source rather than from pervious csv. 
 
