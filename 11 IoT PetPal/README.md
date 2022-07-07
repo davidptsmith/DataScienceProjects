@@ -1,3 +1,5 @@
+Check out the project github here https://github.com/gabrielnge/IoTPetPal
+
 # IoT Pet Pal Presentation
 
 
