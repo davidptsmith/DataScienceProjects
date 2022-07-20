@@ -4,6 +4,10 @@ This trigger warning for anyone who may be personally affected by this topic - s
 
 <br/>
 
+![image](https://user-images.githubusercontent.com/76982323/179906492-20283704-8ea0-4a1d-a694-31c7d135e53f.png)
+
+<br/>
+
 # Global Terrorism Database 
 
 This was a university project where we had to explore a dataset and then look at creating models. I worked with a friend and colleague studying Violent Extremism who asked if I could help him explore questions form the Global Terrorism Databases Global Terrorism Database (GTD) collated and maintained by the START institute in the United States. 
