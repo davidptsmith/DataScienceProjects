@@ -1,3 +1,19 @@
+#  Video Explainations
+
+### Data Warehouse Design, ETL Process, SQL Server & Data Cube, PowerBi
+
+
+[![Data Warehouse Design, ETL Process, SQL Server & Data Cube, PowerBi](http://img.youtube.com/vi/YPcUFGacMrQ/0.jpg)](http://www.youtube.com/watch?v=YPcUFGacMrQ "Data Warehouse Design, ETL Process, SQL Server & Data Cube, PowerBi")
+
+
+### Association Rule Mining & Neo4j Graph Database
+
+[![Association Rule Mining & Neo4j Graph Database](http://img.youtube.com/vi/Z94lPlpterg/0.jpg)](http://www.youtube.com/watch?v=Z94lPlpterg "Association Rule Mining & Neo4j Graph Database")
+
+
+
+
+
 # ETL to SQL Server with Python 
 
 ![ETL@4x](https://user-images.githubusercontent.com/76982323/177718282-72433c99-e415-45d5-8de3-2181540e1a3f.png)
