@@ -4,9 +4,6 @@ This trigger warning for anyone who may be personally affected by this topic - s
 
 <br/>
 
-![image](https://user-images.githubusercontent.com/76982323/179906492-20283704-8ea0-4a1d-a694-31c7d135e53f.png)
-
-<br/>
 
 # Global Terrorism Database 
 
@@ -19,6 +16,9 @@ Please feel free to explore the R notebooks and the outcomes, however note that 
 
 <br/>
 
+![image](https://user-images.githubusercontent.com/76982323/179906492-20283704-8ea0-4a1d-a694-31c7d135e53f.png)
+
+<br/>
 
 # Introduction
 
