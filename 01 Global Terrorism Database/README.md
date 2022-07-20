@@ -2,8 +2,6 @@
 
 This trigger warning for anyone who may be personally affected by this topic - specific details of attacks are not explicitly discussed however summaries of events are provided as well as other statistics
 
-<br/>
-
 
 # Global Terrorism Database 
 
